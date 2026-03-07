@@ -4150,8 +4150,10 @@ themeButtons.forEach((button) => {
 });
 
 document.querySelectorAll('.group-toggle').forEach((button) => {
+  button.setAttribute('aria-expanded', String(!button.parentElement.classList.contains('collapsed')));
   button.addEventListener('click', () => {
-    button.parentElement.classList.toggle('collapsed');
+    const collapsed = button.parentElement.classList.toggle('collapsed');
+    button.setAttribute('aria-expanded', String(!collapsed));
   });
 });
 
@@ -4193,7 +4195,9 @@ const activeObserver = new IntersectionObserver((entries) => {
     const active = link.getAttribute('href') === `#${current.id}`;
     link.classList.toggle('active', active);
     if (active) {
-      link.closest('.nav-group')?.classList.remove('collapsed');
+      const group = link.closest('.nav-group');
+      group?.classList.remove('collapsed');
+      group?.querySelector('.group-toggle')?.setAttribute('aria-expanded', 'true');
     }
   });
 }, { rootMargin: '-18% 0px -58% 0px', threshold: [0.2, 0.45, 0.65] });

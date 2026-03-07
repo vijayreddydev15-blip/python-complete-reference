@@ -224,8 +224,10 @@ p code, li code, td code {
   transition: transform 0.2s ease;
 }
 .nav-group.collapsed .group-toggle span:last-child { transform: rotate(-90deg); }
+.nav-group.collapsed .group-toggle { border-bottom-color: transparent; }
 
 .group-links { padding: 0.45rem 0.4rem 0.65rem; }
+.nav-group.collapsed .group-links { display: none; }
 .group-links a {
   display: flex;
   align-items: center;
