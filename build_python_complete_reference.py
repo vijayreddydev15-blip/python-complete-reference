@@ -10,7 +10,11 @@ from html import escape
 from pathlib import Path
 from textwrap import dedent
 
-OUTFILE = Path(r"d:\python_complete_reference.html")
+ROOT = Path(__file__).resolve().parent
+OUTFILE = ROOT / "python_complete_reference.html"
+STYLESHEET = ROOT / "styles.css"
+LIGHT_STYLESHEET = ROOT / "styles-light.css"
+DARK_STYLESHEET = ROOT / "styles-dark.css"
 
 BUILTIN_NAMES = {name for name in dir(py_builtins) if not name.startswith('_')}
 
@@ -52,7 +56,13 @@ NAV_LABELS = {
 
 
 def b(text: str) -> str:
-    return dedent(text).strip("\n")
+    lines = text.strip("\n").splitlines()
+    first_content = next((line for line in lines if line.strip()), "")
+    # Strip the example's outer margin without touching embedded multiline string contents.
+    margin = first_content[: len(first_content) - len(first_content.lstrip())]
+    if not margin:
+        return "\n".join(lines)
+    return "\n".join(line[len(margin):] if line.startswith(margin) else line for line in lines)
 
 
 def ex(title: str, why: str, code: str, observe: str) -> dict[str, str]:
@@ -95,7 +105,7 @@ concepts.extend([
                 "Hello world, character by character",
                 "This makes the smallest useful Python program explicit. Even the invisible newline matters because Python reads text, not mystical commands.",
                 b('''
-                source = 'print("Hello, world!")\n'
+                source = 'print("Hello, world!")\\n'
                 print(repr(source))
                 print("p r i n t -> the function name")
                 print("( and ) -> the call boundary")
@@ -111,7 +121,7 @@ concepts.extend([
                 import ast
                 import dis
 
-                source = "total = 1 + 2\nprint(total)\n"
+                source = "total = 1 + 2\\nprint(total)\\n"
                 tree = ast.parse(source)
                 print(ast.dump(tree, indent=2))
 
@@ -178,7 +188,7 @@ concepts.extend([
                 "Shebang text and the launcher concept",
                 "Unix-like systems can read the first line of a script as an instruction for which interpreter should run it.",
                 b('''
-                script = "#!/usr/bin/env python3\nprint('hello from a script')\n"
+                script = "#!/usr/bin/env python3\\nprint('hello from a script')\\n"
                 print(script.splitlines()[0])
                 print("On Windows, `py script.py` plays a similar launcher role")
                 '''),
@@ -225,7 +235,7 @@ concepts.extend([
                 b('''
                 import dis
 
-                source = "x = 10\ny = x + 5\nprint(y)\n"
+                source = "x = 10\\ny = x + 5\\nprint(y)\\n"
                 code = compile(source, "<exec-model>", "exec")
                 dis.dis(code)
                 '''),
@@ -239,7 +249,7 @@ concepts.extend([
                 import py_compile
 
                 path = pathlib.Path("demo_exec_model.py")
-                path.write_text("value = 42\nprint(value)\n", encoding="utf-8")
+                path.write_text("value = 42\\nprint(value)\\n", encoding="utf-8")
                 py_compile.compile(str(path), doraise=True)
                 print(sorted(str(p) for p in path.parent.glob("__pycache__/demo_exec_model*.pyc")))
                 '''),
@@ -571,7 +581,7 @@ concepts.extend([
                 print(name[:2])
                 print(f"{name:>8} | {score:.1f}")
                 print(f"{score=}")
-                print(r"c:\new_folder\notes.txt")
+                print(r"c:\\new_folder\\notes.txt")
                 '''),
                 "Slicing returns a new string, f-strings can align and round values, and raw strings are handy when backslashes would otherwise be noisy.",
             ),
@@ -2638,7 +2648,7 @@ concepts.extend([
                 import csv
                 import io
 
-                data = io.StringIO("name,score\nAda,98\nGrace,99\n")
+                data = io.StringIO("name,score\\nAda,98\\nGrace,99\\n")
                 for row in csv.DictReader(data):
                     print(row["name"], int(row["score"]))
                 '''),
@@ -3346,7 +3356,7 @@ concepts.extend([
                 "Python resolves local names more cheaply than globals.",
                 b('''
                 import timeit
-                setup = "x = 1\n"
+                setup = "x = 1\\n"
                 print(timeit.timeit("x + 1", setup=setup, number=1_000_000))
                 '''),
                 "This difference exists, but it matters far less than choosing the right algorithm and data structure.",
@@ -3526,6 +3536,22 @@ concepts.extend([
         "Most anti-patterns come from fighting the language model instead of working with it. Learn the model once and many bugs disappear.",
     ),
 ])
+
+
+def validate_examples() -> None:
+    for concept in concepts:
+        for index, example in enumerate(concept["examples"], 1):
+            source = example["code"]
+            first_content = next((line for line in example["code"].splitlines() if line.strip()), "")
+            if first_content[:1].isspace():
+                raise ValueError(f"{concept['id']} example {index} still starts indented after normalization")
+            try:
+                list(tokenize.generate_tokens(io.StringIO(source if source.endswith("\n") else source + "\n").readline))
+            except (tokenize.TokenError, IndentationError) as exc:
+                raise ValueError(f"{concept['id']} example {index} is not lexically valid Python: {exc}") from exc
+
+
+validate_examples()
 
 
 def default_misconceptions(concept: dict[str, object]) -> list[dict[str, str]]:
@@ -3875,464 +3901,48 @@ def html_header(by_layer: dict[int, list[dict[str, object]]]) -> str:
             f"<section class='nav-group' data-layer='{layer}'><button class='group-toggle' type='button' data-layer='{layer}'><span>{NAV_LABELS[layer]}</span><span>&#9662;</span></button><div class='group-links'>{links}</div></section>"
         )
     template = """<!DOCTYPE html>
-<html lang='en'>
+<html lang='en' data-theme='dark'>
 <head>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
 <title>Python Complete Reference</title>
 <link rel='preconnect' href='https://fonts.googleapis.com'>
 <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
-<link href='https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap' rel='stylesheet'>
-<style>
-:root {
-  font-size: clamp(16px, 1.15vw, 19px);
-  --bg: #080b10;
-  --bg-raised: #0d1118;
-  --panel: #111620;
-  --panel2: #161c28;
-  --sidebar: #0b0e15;
-  --text-hi: #f2eed8;
-  --text-mid: #a8a398;
-  --text-lo: #6b6560;
-  --amber: #f5a623;
-  --amber-dim: #a06b14;
-  --cyan: #00d4ff;
-  --cyan-dim: #0e6e88;
-  --ok: #4ade80;
-  --warn: #fb923c;
-  --danger: #f87171;
-  --info: #818cf8;
-  --border: rgba(255,255,255,0.09);
-  --border-accent: rgba(245,166,35,0.22);
-  --border-code: rgba(0,212,255,0.14);
-  --shadow: 0 18px 50px rgba(0,0,0,0.35);
-  --side: 320px;
-  --r: 18px;
-  --lh-body: 1.75;
-  --lh-heading: 1.1;
-  --lh-code: 1.6;
-  --head: 'Fraunces', serif;
-  --body: 'Lora', serif;
-  --code: 'JetBrains Mono', monospace;
+<link rel='preconnect' href='https://api.fontshare.com' crossorigin>
+<link id='themeStylesheet' rel='stylesheet' href='styles-dark.css'>
+<link rel='stylesheet' href='styles.css'>
+<script>
+try {
+  const savedTheme = localStorage.getItem('python-reference-theme');
+  const theme = savedTheme === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = theme;
+  window.__initialTheme = theme;
+  if (theme === 'light') {
+    document.getElementById('themeStylesheet').href = 'styles-light.css';
+  }
+} catch (error) {
+  document.documentElement.dataset.theme = 'dark';
+  window.__initialTheme = 'dark';
 }
-
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body {
-  margin: 0;
-  background-color: var(--bg);
-  background-image:
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse 40% 28% at 6% 8%, rgba(245,166,35,0.10) 0%, transparent 100%),
-    radial-gradient(ellipse 50% 35% at 95% 95%, rgba(0,212,255,0.05) 0%, transparent 100%),
-    linear-gradient(168deg, #0b0e14 0%, #080b10 100%);
-  color: var(--text-hi);
-  font-family: var(--body);
-  line-height: var(--lh-body);
-}
-
-a { color: var(--amber); text-decoration: none; }
-a:hover { color: var(--text-hi); }
-h1, h2, h3, h4 { font-family: var(--head); line-height: var(--lh-heading); margin: 0; }
-h1 { font-size: clamp(2.8rem, 5.5vw, 5rem); letter-spacing: -0.03em; }
-h2 { font-size: clamp(1.6rem, 3vw, 2.8rem); letter-spacing: -0.02em; margin-top: 0.35rem; }
-h3 { font-size: clamp(1.1rem, 1.6vw, 1.4rem); letter-spacing: -0.01em; font-weight: 600; margin: 1.9rem 0 0.8rem; }
-h4 { font-size: 1rem; margin: 0 0 0.5rem; }
-p, li, td, th, summary { font-size: 1rem; }
-code, pre, .meta-label, .section-kicker, .group-toggle, .badge { font-family: var(--code); }
-p code, li code, td code {
-  background: rgba(245,166,35,0.10);
-  border: 1px solid rgba(245,166,35,0.20);
-  border-radius: 5px;
-  padding: 0.1em 0.38em;
-  font-size: 0.87em;
-  color: #fcd34d;
-}
-
-.app-shell { display: flex; min-height: 100vh; }
-.sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: var(--side);
-  overflow-y: auto;
-  padding: 1.25rem 1rem;
-  background: linear-gradient(180deg, #0b0e15 0%, #070a10 100%);
-  border-right: 1px solid var(--border);
-  z-index: 30;
-}
-.nav-group {
-  margin: 1rem 0;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.005));
-}
-.group-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--text-mid);
-  padding: 0.9rem 1rem 0.6rem;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  background: transparent;
-  cursor: pointer;
-}
-.group-toggle::before {
-  content: attr(data-layer);
-  display: inline-block;
-  width: 1.4rem;
-  height: 1.4rem;
-  line-height: 1.4rem;
-  text-align: center;
-  background: rgba(245,166,35,0.12);
-  border: 1px solid var(--border-accent);
-  border-radius: 4px;
-  font-size: 0.72rem;
-  color: var(--amber);
-  margin-right: 0.6rem;
-}
-.group-toggle span:first-of-type { flex: 1; text-align: left; }
-.group-toggle span:last-child { transition: transform 0.18s ease; }
-.nav-group.collapsed .group-toggle span:last-child { transform: rotate(-90deg); }
-.group-links { padding: 0.4rem 0.45rem 0.7rem; }
-.group-links a {
-  display: block;
-  border-radius: 4px;
-  padding: 0.38rem 0.7rem;
-  font-size: 0.875rem;
-  border-left: 2px solid transparent;
-  color: var(--text-mid);
-  transition: border-left-color 0.18s, background 0.18s, color 0.18s;
-}
-.group-links a:hover,
-.group-links a.active {
-  background: rgba(245,166,35,0.07);
-  border-left-color: var(--amber);
-  color: var(--text-hi);
-}
-.mobile-toggle {
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  z-index: 40;
-  display: none;
-  width: 46px;
-  height: 46px;
-  border: 1px solid var(--border);
-  background: rgba(13,17,24,0.92);
-  color: var(--text-hi);
-  border-radius: 6px;
-  box-shadow: var(--shadow);
-  cursor: pointer;
-}
-
-main {
-  margin-left: calc(var(--side) + 18px);
-  width: calc(100vw - var(--side) - 30px);
-  padding: 1.35rem 1.25rem 4rem;
-}
-.hero, .concept-section, .resources, .quick-reference {
-  background: linear-gradient(180deg, rgba(17,22,32,0.96), rgba(10,13,19,0.95));
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  margin-bottom: 1.6rem;
-  transition: opacity 0.45s ease, transform 0.45s ease, border-color 0.18s ease;
-}
-.hero {
-  border-left: 3px solid var(--amber-dim);
-  border-radius: 0 var(--r) var(--r) 0;
-  padding: 2rem;
-}
-.hero p { max-width: 74ch; color: var(--text-mid); }
-body.enhanced .hero,
-body.enhanced .concept-section,
-body.enhanced .resources,
-body.enhanced .quick-reference {
-  opacity: 0;
-  transform: translateY(12px);
-}
-body.enhanced .revealed { opacity: 1; transform: none; }
-.concept-section {
-  border-left: 3px solid transparent;
-  border-radius: 0 var(--r) var(--r) 0;
-  padding: 1.7rem 1.7rem 1.8rem calc(1.6rem + 3px);
-  scroll-margin-top: 18px;
-}
-.concept-section[data-layer='0']  { border-left-color: #4ade80; }
-.concept-section[data-layer='1']  { border-left-color: #34d399; }
-.concept-section[data-layer='2']  { border-left-color: #60a5fa; }
-.concept-section[data-layer='3']  { border-left-color: #818cf8; }
-.concept-section[data-layer='4']  { border-left-color: #c084fc; }
-.concept-section[data-layer='5']  { border-left-color: #e879f9; }
-.concept-section[data-layer='6']  { border-left-color: #fb923c; }
-.concept-section[data-layer='7']  { border-left-color: #f97316; }
-.concept-section[data-layer='8']  { border-left-color: #f87171; }
-.concept-section[data-layer='9']  { border-left-color: #ef4444; }
-.concept-section[data-layer='10'] { border-left-color: #dc2626; }
-.concept-section[data-layer='11'] { border-left-color: #b91c1c; }
-.concept-section[data-layer='12'] { border-left-color: #be123c; }
-.concept-section[data-layer='13'] { border-left-color: #e11d48; }
-.concept-section[data-layer='14'] { border-left-color: #fb7185; }
-.section-kicker {
-  color: var(--amber-dim);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  margin-bottom: 0.45rem;
-}
-.section-meta, .section-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.85rem 1rem;
-  justify-content: space-between;
-  align-items: center;
-  margin: 1rem 0 1.25rem;
-}
-.prereq-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
-.meta-label {
-  color: var(--text-mid);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.badge {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 4px;
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  padding: 0.22rem 0.55rem;
-  background: rgba(0,212,255,0.09);
-  border: 1px solid rgba(0,212,255,0.18);
-  color: var(--cyan);
-}
-.badge-foundation { background: rgba(74,222,128,0.1); color: var(--ok); border-color: rgba(74,222,128,0.2); }
-.badge-subtle { background: rgba(255,255,255,0.05); color: var(--text-mid); border-color: rgba(255,255,255,0.08); }
-.what-youll-learn ul { margin: 0.5rem 0 0 1.1rem; padding: 0; }
-.what-youll-learn li { margin: 0.15rem 0; }
-.callout {
-  --callout-color: var(--amber);
-  --callout-bg: rgba(245,166,35,0.07);
-  border-left: 3px solid var(--callout-color);
-  background: var(--callout-bg);
-  border-radius: 0 12px 12px 0;
-  padding: 1rem 1rem 1rem 1.1rem;
-  margin: 1.15rem 0;
-}
-.callout.motivation { --callout-color: #60a5fa; --callout-bg: rgba(96,165,250,0.07); }
-.callout.misconception { --callout-color: var(--warn); --callout-bg: rgba(251,146,60,0.07); }
-.callout.pitfall { --callout-color: var(--danger); --callout-bg: rgba(248,113,113,0.07); }
-.callout-title { color: var(--callout-color); margin-bottom: 0.35rem; font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; }
-.example-card, .misconception-card, .pitfall-card {
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.02);
-  border-radius: 8px;
-  padding: 1rem;
-  margin: 1rem 0;
-  transition: transform 0.18s, border-color 0.18s;
-}
-.example-card:hover { transform: translateY(-2px); border-color: rgba(0,212,255,0.22); }
-.misconception-card:hover { transform: translateY(-2px); border-color: rgba(251,146,60,0.22); }
-.pitfall-card:hover { transform: translateY(-2px); border-color: rgba(248,113,113,0.22); }
-pre {
-  position: relative;
-  background: #060910;
-  border: 1px solid var(--border-code);
-  border-top: 4px solid var(--cyan);
-  border-radius: 14px;
-  padding: 2.5rem 1rem 1rem;
-  margin: 1.85rem 0 1rem;
-  overflow: auto;
-  line-height: var(--lh-code);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
-}
-pre[data-lang]::before {
-  content: attr(data-lang);
-  position: absolute;
-  top: 0.75rem;
-  left: 0.95rem;
-  color: var(--cyan);
-  font-family: var(--code);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-}
-pre code {
-  display: block;
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--text-hi);
-  white-space: pre;
-  tab-size: 4;
-  width: max-content;
-  min-width: 100%;
-}
-pre.has-lines code {
-  white-space: normal;
-}
-.code-line {
-  display: grid;
-  grid-template-columns: minmax(2ch, auto) 1fr;
-  column-gap: 1rem;
-  align-items: baseline;
-  min-width: max-content;
-}
-.line-no {
-  color: var(--text-lo);
-  border-right: 1px solid rgba(255,255,255,0.08);
-  padding-right: 0.85rem;
-  min-width: 2.5ch;
-  text-align: right;
-  user-select: none;
-}
-.line-text {
-  display: block;
-  white-space: pre;
-}
-.mental-model code { color: #e8cf8c; }
-.tok-keyword  { color: #ff9ad5; }
-.tok-builtin  { color: #7dd3fc; }
-.tok-string   { color: #86efac; }
-.tok-number   { color: #c4b5fd; }
-.tok-comment  { color: #7c8aa5; font-style: italic; }
-.tok-operator { color: #fbbf24; }
-.copy-btn {
-  position: absolute;
-  top: 0.68rem;
-  right: 0.8rem;
-  opacity: 0.88;
-  pointer-events: auto;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.04);
-  color: var(--text-hi);
-  border-radius: 999px;
-  padding: 0.38rem 0.7rem;
-  font-family: var(--code);
-  font-size: 0.76rem;
-  cursor: pointer;
-  transition: opacity 0.15s, background 0.15s, border-color 0.15s;
-}
-.copy-btn:hover,
-.copy-btn:focus-visible {
-  opacity: 1;
-  background: rgba(245,166,35,0.1);
-  border-color: var(--amber-dim);
-}
-.dag-wrap {
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.02);
-  padding: 1.15rem;
-  overflow: auto;
-}
-.mermaid { min-width: 100%; width: 100%; }
-.mermaid svg { width: 100% !important; height: auto !important; }
-.table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-}
-table {
-  width: 100%;
-  min-width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-thead th {
-  background: #0d1118;
-  color: var(--amber);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  padding: 0.85rem 1rem;
-  border-bottom: 2px solid var(--border-accent);
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-tbody tr:nth-child(even) { background: rgba(255,255,255,0.025); }
-tbody tr:hover { background: rgba(245,166,35,0.05); transition: background 0.1s; }
-td {
-  padding: 0.7rem 1rem;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.9rem;
-  vertical-align: top;
-}
-td:first-child, th:first-child {
-  position: sticky;
-  left: 0;
-  background: var(--panel);
-  font-weight: 600;
-  z-index: 1;
-}
-details {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.85rem 1rem;
-  margin: 0.75rem 0;
-  background: rgba(255,255,255,0.03);
-}
-details summary {
-  cursor: pointer;
-  color: #ffcb63;
-  font-family: var(--code);
-}
-.section-footer a { color: var(--text-hi); }
-.section-footer a:hover { color: var(--amber); }
-.back-to-top {
-  position: fixed;
-  right: 1.2rem;
-  bottom: 1.2rem;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(6px);
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(13,17,24,0.88);
-  color: var(--text-hi);
-  border-radius: 6px;
-  padding: 0.55rem 0.9rem;
-  font-family: var(--code);
-  cursor: pointer;
-  transition: opacity 0.25s, transform 0.25s;
-  z-index: 35;
-}
-.back-to-top.visible {
-  opacity: 1;
-  visibility: visible;
-  animation: nudge 0.5s ease 0.2s both;
-}
-@keyframes nudge {
-  0% { transform: translateY(6px); }
-  60% { transform: translateY(-3px); }
-  100% { transform: translateY(0); }
-}
-@media (max-width: 768px) {
-  h1 { font-size: clamp(1.9rem, 7vw, 2.8rem); }
-  h2 { font-size: clamp(1.4rem, 5vw, 2rem); }
-  .mobile-toggle { display: inline-flex; align-items: center; justify-content: center; }
-  .sidebar { transform: translateX(-102%); transition: transform 0.25s ease; width: min(88vw, 320px); }
-  .sidebar.open { transform: translateX(0); }
-  main { margin-left: 0; width: 100vw; padding: 1rem 1rem 4rem; }
-  .hero { padding: 1.35rem; }
-  .concept-section, .resources, .quick-reference { padding: 1.2rem 1rem 1.4rem calc(0.95rem + 3px); }
-  pre { font-size: 0.8rem; padding: 2.35rem 0.85rem 0.85rem; }
-  .copy-btn { opacity: 1; padding: 0.32rem 0.58rem; }
-}
-</style>
+</script>
 </head>
 <body>
 <!-- [TASK-1 START] -->
 <button class='mobile-toggle' id='mobileToggle' aria-label='Toggle navigation'>&#9776;</button>
 <div class='app-shell'>
 <aside class='sidebar' id='sidebar'>
+  <div class='sidebar-top'>
+    <div class='theme-switch'>
+      <div class='theme-meta'>
+        <span class='theme-label'>Color Theme</span>
+        <span class='theme-shortcut'><kbd>D</kbd> Toggle</span>
+      </div>
+      <div class='theme-toggle' role='group' aria-label='Color theme'>
+        <button class='theme-option' id='themeLight' type='button' data-theme='light' aria-pressed='false'>Light</button>
+        <button class='theme-option is-active' id='themeDark' type='button' data-theme='dark' aria-pressed='true'>Dark</button>
+      </div>
+    </div>
+  </div>
   __NAV_GROUPS__
 </aside>
 <main>
@@ -4396,6 +4006,59 @@ const revealSections = [...document.querySelectorAll('.hero, .concept-section, .
 const sidebar = document.getElementById('sidebar');
 const mobileToggle = document.getElementById('mobileToggle');
 const backToTop = document.getElementById('backToTop');
+const themeStylesheet = document.getElementById('themeStylesheet');
+const themeButtons = [...document.querySelectorAll('.theme-option')];
+const THEME_STORAGE_KEY = 'python-reference-theme';
+let currentTheme = window.__initialTheme === 'light' ? 'light' : 'dark';
+document.body.dataset.theme = currentTheme;
+
+function syncThemeButtons(theme) {
+  themeButtons.forEach((button) => {
+    const active = button.dataset.theme === theme;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
+
+function isTypingTarget(target) {
+  return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+}
+
+async function renderMermaid(theme) {
+  const nodes = [...document.querySelectorAll('.mermaid')];
+  if (!nodes.length) {
+    return;
+  }
+  nodes.forEach((node) => {
+    if (!node.dataset.graph) {
+      node.dataset.graph = node.textContent || '';
+    }
+    node.removeAttribute('data-processed');
+    node.innerHTML = node.dataset.graph;
+  });
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: theme === 'light' ? 'neutral' : 'dark',
+    flowchart: { useMaxWidth: true, nodeSpacing: 36, rankSpacing: 130 },
+  });
+  await mermaid.run({ querySelector: '.mermaid' });
+}
+
+async function applyTheme(theme, persist = true) {
+  currentTheme = theme === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = currentTheme;
+  document.body.dataset.theme = currentTheme;
+  themeStylesheet.href = currentTheme === 'light' ? 'styles-light.css' : 'styles-dark.css';
+  syncThemeButtons(currentTheme);
+  if (persist) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
+    } catch (error) {
+      // Ignore storage errors and keep the in-memory theme.
+    }
+  }
+  await renderMermaid(currentTheme);
+}
 
 function copyBlockText(pre) {
   const lineTexts = [...pre.querySelectorAll('.line-text')];
@@ -4417,6 +4080,12 @@ document.querySelectorAll('pre[data-lang]').forEach((pre) => {
     setTimeout(() => { button.textContent = 'Copy'; }, 1200);
   });
   pre.appendChild(button);
+});
+
+themeButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    applyTheme(button.dataset.theme || 'dark').catch(() => {});
+  });
 });
 
 document.querySelectorAll('.group-toggle').forEach((button) => {
@@ -4470,9 +4139,24 @@ backToTop.addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
+document.addEventListener('keydown', (event) => {
+  if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) {
+    return;
+  }
+  if (event.key.toLowerCase() !== 'd') {
+    return;
+  }
+  if (isTypingTarget(event.target)) {
+    return;
+  }
+  event.preventDefault();
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark').catch(() => {});
+});
+
 window.addEventListener('scroll', updateScrollState, { passive: true });
 updateScrollState();
-mermaid.initialize({ startOnLoad: true, theme: 'dark', flowchart: { useMaxWidth: true, nodeSpacing: 36, rankSpacing: 130 } });
+syncThemeButtons(currentTheme);
+renderMermaid(currentTheme).catch(() => {});
 </script>
 <!-- [TASK-11 END] -->
 </body></html>
@@ -4496,6 +4180,9 @@ def build_document() -> str:
 
 
 def validate(document: str) -> None:
+    assert STYLESHEET.exists(), STYLESHEET
+    assert LIGHT_STYLESHEET.exists(), LIGHT_STYLESHEET
+    assert DARK_STYLESHEET.exists(), DARK_STYLESHEET
     for concept in concepts:
         cid = concept['id']
         assert document.count(f"id=\"{cid}\"") == 1, cid
