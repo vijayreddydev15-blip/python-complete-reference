@@ -8,6 +8,21 @@
 <link id='lightThemeStylesheet' rel='stylesheet' href='styles-light.css' media='not all'>
 <link rel='preload' href='styles.css' as='style'>
 <link rel='stylesheet' href='styles.css'>
+<style>
+.layer-skeleton {
+  height: 320px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.4s ease infinite;
+  border: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 1.4rem;
+}
+@keyframes skeleton-sweep {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+</style>
 <!-- REVIEW: Keep this inline theme bootstrap in <head>; moving it to the end of <body> would cause the wrong theme to flash before styles apply. -->
 <script>
 try {
@@ -42,7 +57,7 @@ try {
       </div>
     </div>
   </div>
-  <nav class='sidebar-nav' aria-label='Python concept navigation'><section class='nav-group' data-layer='0'><button class='group-toggle' type='button' data-layer='0'><span>Layer 0: Environment</span><span>&#9662;</span></button><div class='group-links'><a href='#PY01' data-id='PY01'>PY01 &middot; What is Python?</a><a href='#PY02' data-id='PY02'>PY02 &middot; Python Installation &amp; the REPL</a><a href='#PY03' data-id='PY03'>PY03 &middot; How Python Executes Code</a><a href='#PY04' data-id='PY04'>PY04 &middot; Python Versioning</a></div></section><section class='nav-group' data-layer='1'><button class='group-toggle' type='button' data-layer='1'><span>Layer 1: Primitives</span><span>&#9662;</span></button><div class='group-links'><a href='#PY05' data-id='PY05'>PY05 &middot; Variables, Assignment, and Name Binding</a><a href='#PY06' data-id='PY06'>PY06 &middot; Python&#x27;s Type System</a><a href='#PY07' data-id='PY07'>PY07 &middot; Built-in Data Types Overview</a><a href='#PY08' data-id='PY08'>PY08 &middot; Operators</a></div></section><section class='nav-group' data-layer='2'><button class='group-toggle' type='button' data-layer='2'><span>Layer 2: Data Structures</span><span>&#9662;</span></button><div class='group-links'><a href='#PY09' data-id='PY09'>PY09 &middot; Strings</a><a href='#PY10' data-id='PY10'>PY10 &middot; Lists</a><a href='#PY11' data-id='PY11'>PY11 &middot; Tuples</a><a href='#PY12' data-id='PY12'>PY12 &middot; Dictionaries</a><a href='#PY13' data-id='PY13'>PY13 &middot; Sets &amp; Frozensets</a><a href='#PY14' data-id='PY14'>PY14 &middot; The Collections Module</a></div></section><section class='nav-group' data-layer='3'><button class='group-toggle' type='button' data-layer='3'><span>Layer 3: Control Flow</span><span>&#9662;</span></button><div class='group-links'><a href='#PY15' data-id='PY15'>PY15 &middot; Conditionals</a><a href='#PY16' data-id='PY16'>PY16 &middot; Loops</a><a href='#PY17' data-id='PY17'>PY17 &middot; Comprehensions</a><a href='#PY18' data-id='PY18'>PY18 &middot; Exception Handling</a></div></section><section class='nav-group' data-layer='4'><button class='group-toggle' type='button' data-layer='4'><span>Layer 4: Functions</span><span>&#9662;</span></button><div class='group-links'><a href='#PY19' data-id='PY19'>PY19 &middot; Functions</a><a href='#PY20' data-id='PY20'>PY20 &middot; Arguments Deep-Dive</a><a href='#PY21' data-id='PY21'>PY21 &middot; Scope &amp; LEGB Rule</a><a href='#PY22' data-id='PY22'>PY22 &middot; Lambda Functions</a><a href='#PY23' data-id='PY23'>PY23 &middot; Higher-Order Functions</a><a href='#PY24' data-id='PY24'>PY24 &middot; Recursion</a></div></section><section class='nav-group' data-layer='5'><button class='group-toggle' type='button' data-layer='5'><span>Layer 5: OOP</span><span>&#9662;</span></button><div class='group-links'><a href='#PY25' data-id='PY25'>PY25 &middot; Classes &amp; Objects</a><a href='#PY26' data-id='PY26'>PY26 &middot; The Object Model</a><a href='#PY27' data-id='PY27'>PY27 &middot; Inheritance</a><a href='#PY28' data-id='PY28'>PY28 &middot; Encapsulation</a><a href='#PY29' data-id='PY29'>PY29 &middot; Dunder / Magic Methods</a><a href='#PY30' data-id='PY30'>PY30 &middot; Abstract Base Classes and Protocols</a><a href='#PY31' data-id='PY31'>PY31 &middot; Dataclasses</a></div></section><section class='nav-group' data-layer='6'><button class='group-toggle' type='button' data-layer='6'><span>Layer 6: Iterators</span><span>&#9662;</span></button><div class='group-links'><a href='#PY32' data-id='PY32'>PY32 &middot; The Iterator Protocol</a><a href='#PY33' data-id='PY33'>PY33 &middot; Generators</a><a href='#PY34' data-id='PY34'>PY34 &middot; Coroutines Basics via Generators</a></div></section><section class='nav-group' data-layer='7'><button class='group-toggle' type='button' data-layer='7'><span>Layer 7: Metaprogramming</span><span>&#9662;</span></button><div class='group-links'><a href='#PY35' data-id='PY35'>PY35 &middot; Decorators</a><a href='#PY36' data-id='PY36'>PY36 &middot; Context Managers</a><a href='#PY37' data-id='PY37'>PY37 &middot; Descriptors</a><a href='#PY38' data-id='PY38'>PY38 &middot; Metaclasses</a></div></section><section class='nav-group' data-layer='8'><button class='group-toggle' type='button' data-layer='8'><span>Layer 8: Modules</span><span>&#9662;</span></button><div class='group-links'><a href='#PY39' data-id='PY39'>PY39 &middot; Modules</a><a href='#PY40' data-id='PY40'>PY40 &middot; Packages</a><a href='#PY41' data-id='PY41'>PY41 &middot; Virtual Environments &amp; Dependency Management</a></div></section><section class='nav-group' data-layer='9'><button class='group-toggle' type='button' data-layer='9'><span>Layer 9: I/O</span><span>&#9662;</span></button><div class='group-links'><a href='#PY42' data-id='PY42'>PY42 &middot; File Handling</a><a href='#PY43' data-id='PY43'>PY43 &middot; JSON, CSV, pickle</a><a href='#PY44' data-id='PY44'>PY44 &middot; pathlib vs os.path</a></div></section><section class='nav-group' data-layer='10'><button class='group-toggle' type='button' data-layer='10'><span>Layer 10: Concurrency</span><span>&#9662;</span></button><div class='group-links'><a href='#PY45' data-id='PY45'>PY45 &middot; Concurrency vs Parallelism vs Asynchrony</a><a href='#PY46' data-id='PY46'>PY46 &middot; Threading</a><a href='#PY47' data-id='PY47'>PY47 &middot; Multiprocessing</a><a href='#PY48' data-id='PY48'>PY48 &middot; asyncio</a></div></section><section class='nav-group' data-layer='11'><button class='group-toggle' type='button' data-layer='11'><span>Layer 11: Typing</span><span>&#9662;</span></button><div class='group-links'><a href='#PY49' data-id='PY49'>PY49 &middot; Type Hints</a><a href='#PY50' data-id='PY50'>PY50 &middot; Static Analysis</a></div></section><section class='nav-group' data-layer='12'><button class='group-toggle' type='button' data-layer='12'><span>Layer 12: Testing</span><span>&#9662;</span></button><div class='group-links'><a href='#PY51' data-id='PY51'>PY51 &middot; unittest</a><a href='#PY52' data-id='PY52'>PY52 &middot; pytest</a><a href='#PY53' data-id='PY53'>PY53 &middot; Mocking</a></div></section><section class='nav-group' data-layer='13'><button class='group-toggle' type='button' data-layer='13'><span>Layer 13: Performance</span><span>&#9662;</span></button><div class='group-links'><a href='#PY54' data-id='PY54'>PY54 &middot; Profiling</a><a href='#PY55' data-id='PY55'>PY55 &middot; Python Memory Model Deep-Dive</a><a href='#PY56' data-id='PY56'>PY56 &middot; Writing Faster Python</a></div></section><section class='nav-group' data-layer='14'><button class='group-toggle' type='button' data-layer='14'><span>Layer 14: Patterns</span><span>&#9662;</span></button><div class='group-links'><a href='#PY57' data-id='PY57'>PY57 &middot; Common Design Patterns in Python</a><a href='#PY58' data-id='PY58'>PY58 &middot; Python Standard Library Tour</a><a href='#PY59' data-id='PY59'>PY59 &middot; Python Anti-Patterns</a></div></section></nav>
+  <nav class='sidebar-nav' aria-label='Python concept navigation'><section class='nav-group' data-layer='ref'><button class='group-toggle' type='button' data-layer='R'><span>References</span><span>&#9662;</span></button><div class='group-links'><a href='#dependency-table' data-id='dependency-table'>Python Concept Dependencies</a><a href='#quick-reference' data-id='quick-reference'>Quick Reference</a></div></section><section class='nav-group' data-layer='0'><button class='group-toggle' type='button' data-layer='0'><span>Layer 0: Environment</span><span>&#9662;</span></button><div class='group-links'><a href='#PY01' data-id='PY01'>PY01 &middot; What is Python?</a><a href='#PY02' data-id='PY02'>PY02 &middot; Python Installation &amp; the REPL</a><a href='#PY03' data-id='PY03'>PY03 &middot; How Python Executes Code</a><a href='#PY04' data-id='PY04'>PY04 &middot; Python Versioning</a></div></section><section class='nav-group' data-layer='1'><button class='group-toggle' type='button' data-layer='1'><span>Layer 1: Primitives</span><span>&#9662;</span></button><div class='group-links'><a href='#PY05' data-id='PY05'>PY05 &middot; Variables, Assignment, and Name Binding</a><a href='#PY06' data-id='PY06'>PY06 &middot; Python&#x27;s Type System</a><a href='#PY07' data-id='PY07'>PY07 &middot; Built-in Data Types Overview</a><a href='#PY08' data-id='PY08'>PY08 &middot; Operators</a></div></section><section class='nav-group' data-layer='2'><button class='group-toggle' type='button' data-layer='2'><span>Layer 2: Data Structures</span><span>&#9662;</span></button><div class='group-links'><a href='#PY09' data-id='PY09'>PY09 &middot; Strings</a><a href='#PY10' data-id='PY10'>PY10 &middot; Lists</a><a href='#PY11' data-id='PY11'>PY11 &middot; Tuples</a><a href='#PY12' data-id='PY12'>PY12 &middot; Dictionaries</a><a href='#PY13' data-id='PY13'>PY13 &middot; Sets &amp; Frozensets</a><a href='#PY14' data-id='PY14'>PY14 &middot; The Collections Module</a></div></section><section class='nav-group' data-layer='3'><button class='group-toggle' type='button' data-layer='3'><span>Layer 3: Control Flow</span><span>&#9662;</span></button><div class='group-links'><a href='#PY15' data-id='PY15'>PY15 &middot; Conditionals</a><a href='#PY16' data-id='PY16'>PY16 &middot; Loops</a><a href='#PY17' data-id='PY17'>PY17 &middot; Comprehensions</a><a href='#PY18' data-id='PY18'>PY18 &middot; Exception Handling</a></div></section><section class='nav-group' data-layer='4'><button class='group-toggle' type='button' data-layer='4'><span>Layer 4: Functions</span><span>&#9662;</span></button><div class='group-links'><a href='#PY19' data-id='PY19'>PY19 &middot; Functions</a><a href='#PY20' data-id='PY20'>PY20 &middot; Arguments Deep-Dive</a><a href='#PY21' data-id='PY21'>PY21 &middot; Scope &amp; LEGB Rule</a><a href='#PY22' data-id='PY22'>PY22 &middot; Lambda Functions</a><a href='#PY23' data-id='PY23'>PY23 &middot; Higher-Order Functions</a><a href='#PY24' data-id='PY24'>PY24 &middot; Recursion</a></div></section><section class='nav-group' data-layer='5'><button class='group-toggle' type='button' data-layer='5'><span>Layer 5: OOP</span><span>&#9662;</span></button><div class='group-links'><a href='#PY25' data-id='PY25'>PY25 &middot; Classes &amp; Objects</a><a href='#PY26' data-id='PY26'>PY26 &middot; The Object Model</a><a href='#PY27' data-id='PY27'>PY27 &middot; Inheritance</a><a href='#PY28' data-id='PY28'>PY28 &middot; Encapsulation</a><a href='#PY29' data-id='PY29'>PY29 &middot; Dunder / Magic Methods</a><a href='#PY30' data-id='PY30'>PY30 &middot; Abstract Base Classes and Protocols</a><a href='#PY31' data-id='PY31'>PY31 &middot; Dataclasses</a></div></section><section class='nav-group' data-layer='6'><button class='group-toggle' type='button' data-layer='6'><span>Layer 6: Iterators</span><span>&#9662;</span></button><div class='group-links'><a href='#PY32' data-id='PY32'>PY32 &middot; The Iterator Protocol</a><a href='#PY33' data-id='PY33'>PY33 &middot; Generators</a><a href='#PY34' data-id='PY34'>PY34 &middot; Coroutines Basics via Generators</a></div></section><section class='nav-group' data-layer='7'><button class='group-toggle' type='button' data-layer='7'><span>Layer 7: Metaprogramming</span><span>&#9662;</span></button><div class='group-links'><a href='#PY35' data-id='PY35'>PY35 &middot; Decorators</a><a href='#PY36' data-id='PY36'>PY36 &middot; Context Managers</a><a href='#PY37' data-id='PY37'>PY37 &middot; Descriptors</a><a href='#PY38' data-id='PY38'>PY38 &middot; Metaclasses</a></div></section><section class='nav-group' data-layer='8'><button class='group-toggle' type='button' data-layer='8'><span>Layer 8: Modules</span><span>&#9662;</span></button><div class='group-links'><a href='#PY39' data-id='PY39'>PY39 &middot; Modules</a><a href='#PY40' data-id='PY40'>PY40 &middot; Packages</a><a href='#PY41' data-id='PY41'>PY41 &middot; Virtual Environments &amp; Dependency Management</a></div></section><section class='nav-group' data-layer='9'><button class='group-toggle' type='button' data-layer='9'><span>Layer 9: I/O</span><span>&#9662;</span></button><div class='group-links'><a href='#PY42' data-id='PY42'>PY42 &middot; File Handling</a><a href='#PY43' data-id='PY43'>PY43 &middot; JSON, CSV, pickle</a><a href='#PY44' data-id='PY44'>PY44 &middot; pathlib vs os.path</a></div></section><section class='nav-group' data-layer='10'><button class='group-toggle' type='button' data-layer='10'><span>Layer 10: Concurrency</span><span>&#9662;</span></button><div class='group-links'><a href='#PY45' data-id='PY45'>PY45 &middot; Concurrency vs Parallelism vs Asynchrony</a><a href='#PY46' data-id='PY46'>PY46 &middot; Threading</a><a href='#PY47' data-id='PY47'>PY47 &middot; Multiprocessing</a><a href='#PY48' data-id='PY48'>PY48 &middot; asyncio</a></div></section><section class='nav-group' data-layer='11'><button class='group-toggle' type='button' data-layer='11'><span>Layer 11: Typing</span><span>&#9662;</span></button><div class='group-links'><a href='#PY49' data-id='PY49'>PY49 &middot; Type Hints</a><a href='#PY50' data-id='PY50'>PY50 &middot; Static Analysis</a></div></section><section class='nav-group' data-layer='12'><button class='group-toggle' type='button' data-layer='12'><span>Layer 12: Testing</span><span>&#9662;</span></button><div class='group-links'><a href='#PY51' data-id='PY51'>PY51 &middot; unittest</a><a href='#PY52' data-id='PY52'>PY52 &middot; pytest</a><a href='#PY53' data-id='PY53'>PY53 &middot; Mocking</a></div></section><section class='nav-group' data-layer='13'><button class='group-toggle' type='button' data-layer='13'><span>Layer 13: Performance</span><span>&#9662;</span></button><div class='group-links'><a href='#PY54' data-id='PY54'>PY54 &middot; Profiling</a><a href='#PY55' data-id='PY55'>PY55 &middot; Python Memory Model Deep-Dive</a><a href='#PY56' data-id='PY56'>PY56 &middot; Writing Faster Python</a></div></section><section class='nav-group' data-layer='14'><button class='group-toggle' type='button' data-layer='14'><span>Layer 14: Patterns</span><span>&#9662;</span></button><div class='group-links'><a href='#PY57' data-id='PY57'>PY57 &middot; Common Design Patterns in Python</a><a href='#PY58' data-id='PY58'>PY58 &middot; Python Standard Library Tour</a><a href='#PY59' data-id='PY59'>PY59 &middot; Python Anti-Patterns</a></div></section></nav>
 </aside>
 <main>
 
@@ -51,7 +66,7 @@ try {
   <h1>Python from Runtime Basics to Expert Practice</h1>
   <p>This document is ordered by dependencies rather than as a loose glossary. Each topic appears only after its prerequisites, so you can learn the runtime model, core syntax, data structures, functions, OOP, protocols, packaging, concurrency, testing, and performance in a sequence that does not smuggle in unexplained concepts.</p>
   <p>The left sidebar is grouped by layer and highlights the active section as you scroll. Every concept section includes motivation, explanation, mental model, examples, misconceptions, pitfalls, and self-check questions so the file reads like a compact textbook instead of a cheatsheet.</p>
-</section><section class='concept-section' id='dependency-table' data-title='Dependency Table'><div class='section-kicker'>Dependency Table</div><h2>Python Concept Dependencies</h2><p>Use this table as the overview for the reference. Each row shows a concept, the layer it belongs to, the concepts you should understand first, and the concepts that build on it later.</p><div class='table-wrap'><table><thead><tr><th>ID</th><th>Concept Name</th><th>Layer</th><th>Direct Prerequisites</th><th>Direct Dependents</th></tr></thead><tbody><tr><td><a href='#PY01'>PY01</a></td><td>What is Python?</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY02'>PY02</a></td><td>Python Installation &amp; the REPL</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY03'>PY03</a></td><td>How Python Executes Code</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY19, PY20, PY21, PY22, PY23, PY24, PY39, PY40, PY41, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY04'>PY04</a></td><td>Python Versioning</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY05'>PY05</a></td><td>Variables, Assignment, and Name Binding</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY06'>PY06</a></td><td>Python&#x27;s Type System</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY49, PY50, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY07'>PY07</a></td><td>Built-in Data Types Overview</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY08'>PY08</a></td><td>Operators</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY09'>PY09</a></td><td>Strings</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY10'>PY10</a></td><td>Lists</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY11'>PY11</a></td><td>Tuples</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY12'>PY12</a></td><td>Dictionaries</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY13'>PY13</a></td><td>Sets &amp; Frozensets</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY14'>PY14</a></td><td>The Collections Module</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY15'>PY15</a></td><td>Conditionals</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY16'>PY16</a></td><td>Loops</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY17'>PY17</a></td><td>Comprehensions</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY18'>PY18</a></td><td>Exception Handling</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY42, PY43, PY44, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY19'>PY19</a></td><td>Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY20'>PY20</a></td><td>Arguments Deep-Dive</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY21'>PY21</a></td><td>Scope &amp; LEGB Rule</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY35, PY36, PY37, PY38, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY22'>PY22</a></td><td>Lambda Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY23'>PY23</a></td><td>Higher-Order Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY24'>PY24</a></td><td>Recursion</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY25'>PY25</a></td><td>Classes &amp; Objects</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY35, PY36, PY37, PY38, PY51, PY52, PY53, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY26'>PY26</a></td><td>The Object Model</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY27'>PY27</a></td><td>Inheritance</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY28'>PY28</a></td><td>Encapsulation</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY29'>PY29</a></td><td>Dunder / Magic Methods</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY30'>PY30</a></td><td>Abstract Base Classes and Protocols</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY49, PY50, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY31'>PY31</a></td><td>Dataclasses</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY32'>PY32</a></td><td>The Iterator Protocol</td><td>6</td><td>PY24, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY33'>PY33</a></td><td>Generators</td><td>6</td><td>PY24, PY29</td><td>PY45, PY46, PY47, PY48, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY34'>PY34</a></td><td>Coroutines Basics via Generators</td><td>6</td><td>PY24, PY29</td><td>PY45, PY46, PY47, PY48, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY35'>PY35</a></td><td>Decorators</td><td>7</td><td>PY21, PY25, PY29</td><td>PY51, PY52, PY53, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY36'>PY36</a></td><td>Context Managers</td><td>7</td><td>PY21, PY25, PY29</td><td>PY42, PY43, PY44, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY37'>PY37</a></td><td>Descriptors</td><td>7</td><td>PY21, PY25, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY38'>PY38</a></td><td>Metaclasses</td><td>7</td><td>PY21, PY25, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY39'>PY39</a></td><td>Modules</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY40'>PY40</a></td><td>Packages</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY41'>PY41</a></td><td>Virtual Environments &amp; Dependency Management</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY42'>PY42</a></td><td>File Handling</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY43'>PY43</a></td><td>JSON, CSV, pickle</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY44'>PY44</a></td><td>pathlib vs os.path</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY45'>PY45</a></td><td>Concurrency vs Parallelism vs Asynchrony</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY46'>PY46</a></td><td>Threading</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY47'>PY47</a></td><td>Multiprocessing</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY48'>PY48</a></td><td>asyncio</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY49'>PY49</a></td><td>Type Hints</td><td>11</td><td>PY06, PY30</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY50'>PY50</a></td><td>Static Analysis</td><td>11</td><td>PY06, PY30</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY51'>PY51</a></td><td>unittest</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY52'>PY52</a></td><td>pytest</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY53'>PY53</a></td><td>Mocking</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY54'>PY54</a></td><td>Profiling</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY55'>PY55</a></td><td>Python Memory Model Deep-Dive</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY56'>PY56</a></td><td>Writing Faster Python</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY57'>PY57</a></td><td>Common Design Patterns in Python</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr><tr><td><a href='#PY58'>PY58</a></td><td>Python Standard Library Tour</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr><tr><td><a href='#PY59'>PY59</a></td><td>Python Anti-Patterns</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr></tbody></table></div></section>
+</section><div id='layerMount' hidden aria-hidden='true'></div><section class='concept-section' id='dependency-table' data-title='Dependency Table'><div class='section-kicker'>Dependency Table</div><h2>Python Concept Dependencies</h2><p>Use this table as the overview for the reference. Each row shows a concept, the layer it belongs to, the concepts you should understand first, and the concepts that build on it later.</p><div class='table-wrap'><table><thead><tr><th>ID</th><th>Concept Name</th><th>Layer</th><th>Direct Prerequisites</th><th>Direct Dependents</th></tr></thead><tbody><tr><td><a href='#PY01'>PY01</a></td><td>What is Python?</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY02'>PY02</a></td><td>Python Installation &amp; the REPL</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY03'>PY03</a></td><td>How Python Executes Code</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY19, PY20, PY21, PY22, PY23, PY24, PY39, PY40, PY41, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY04'>PY04</a></td><td>Python Versioning</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY05'>PY05</a></td><td>Variables, Assignment, and Name Binding</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY06'>PY06</a></td><td>Python&#x27;s Type System</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY49, PY50, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY07'>PY07</a></td><td>Built-in Data Types Overview</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY08'>PY08</a></td><td>Operators</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY09'>PY09</a></td><td>Strings</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY10'>PY10</a></td><td>Lists</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY11'>PY11</a></td><td>Tuples</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY12'>PY12</a></td><td>Dictionaries</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY13'>PY13</a></td><td>Sets &amp; Frozensets</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY14'>PY14</a></td><td>The Collections Module</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY15'>PY15</a></td><td>Conditionals</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY16'>PY16</a></td><td>Loops</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY17'>PY17</a></td><td>Comprehensions</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY18'>PY18</a></td><td>Exception Handling</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY42, PY43, PY44, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY19'>PY19</a></td><td>Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY20'>PY20</a></td><td>Arguments Deep-Dive</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY21'>PY21</a></td><td>Scope &amp; LEGB Rule</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY35, PY36, PY37, PY38, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY22'>PY22</a></td><td>Lambda Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY23'>PY23</a></td><td>Higher-Order Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY24'>PY24</a></td><td>Recursion</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY25'>PY25</a></td><td>Classes &amp; Objects</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY35, PY36, PY37, PY38, PY51, PY52, PY53, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY26'>PY26</a></td><td>The Object Model</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY27'>PY27</a></td><td>Inheritance</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY28'>PY28</a></td><td>Encapsulation</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY29'>PY29</a></td><td>Dunder / Magic Methods</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY30'>PY30</a></td><td>Abstract Base Classes and Protocols</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY49, PY50, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY31'>PY31</a></td><td>Dataclasses</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY32'>PY32</a></td><td>The Iterator Protocol</td><td>6</td><td>PY24, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY33'>PY33</a></td><td>Generators</td><td>6</td><td>PY24, PY29</td><td>PY45, PY46, PY47, PY48, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY34'>PY34</a></td><td>Coroutines Basics via Generators</td><td>6</td><td>PY24, PY29</td><td>PY45, PY46, PY47, PY48, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY35'>PY35</a></td><td>Decorators</td><td>7</td><td>PY21, PY25, PY29</td><td>PY51, PY52, PY53, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY36'>PY36</a></td><td>Context Managers</td><td>7</td><td>PY21, PY25, PY29</td><td>PY42, PY43, PY44, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY37'>PY37</a></td><td>Descriptors</td><td>7</td><td>PY21, PY25, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY38'>PY38</a></td><td>Metaclasses</td><td>7</td><td>PY21, PY25, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY39'>PY39</a></td><td>Modules</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY40'>PY40</a></td><td>Packages</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY41'>PY41</a></td><td>Virtual Environments &amp; Dependency Management</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY42'>PY42</a></td><td>File Handling</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY43'>PY43</a></td><td>JSON, CSV, pickle</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY44'>PY44</a></td><td>pathlib vs os.path</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY45'>PY45</a></td><td>Concurrency vs Parallelism vs Asynchrony</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY46'>PY46</a></td><td>Threading</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY47'>PY47</a></td><td>Multiprocessing</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY48'>PY48</a></td><td>asyncio</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY49'>PY49</a></td><td>Type Hints</td><td>11</td><td>PY06, PY30</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY50'>PY50</a></td><td>Static Analysis</td><td>11</td><td>PY06, PY30</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY51'>PY51</a></td><td>unittest</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY52'>PY52</a></td><td>pytest</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY53'>PY53</a></td><td>Mocking</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY54'>PY54</a></td><td>Profiling</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY55'>PY55</a></td><td>Python Memory Model Deep-Dive</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY56'>PY56</a></td><td>Writing Faster Python</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY57'>PY57</a></td><td>Common Design Patterns in Python</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr><tr><td><a href='#PY58'>PY58</a></td><td>Python Standard Library Tour</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr><tr><td><a href='#PY59'>PY59</a></td><td>Python Anti-Patterns</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr></tbody></table></div></section>
 <section id="PY01" class="concept-section" data-layer="0" data-title="What is Python?">
   <div class="section-kicker">PY01 &middot; Layer 0 &middot; Runtime &amp; Environment</div>
   <h2>What is Python?</h2>
@@ -5980,18 +5995,6 @@ True</code></pre>
   <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#quick-reference">Next concept &rarr; quick-reference</a></div>
 </section>
 
-<section class='resources' id='whats-next' data-title='What's Next?'>
-  <div class='section-kicker'>What's Next?</div>
-  <h2>Keep Going After This Reference</h2>
-  <p>The official documentation stays authoritative for edge cases, the CPython source explains how the reference runtime behaves, and PEPs record the design reasoning behind major language changes. Once this document feels comfortable, the books below are excellent second passes because they focus on Pythonic design rather than raw syntax collection.</p>
-  <ul>
-    <li><a href='https://docs.python.org/3/'>Official Python docs</a></li>
-    <li><a href='https://github.com/python/cpython'>CPython source on GitHub</a></li>
-    <li><a href='https://peps.python.org/'>PEPs index</a></li>
-    <li><cite>Fluent Python</cite> by Luciano Ramalho</li>
-    <li><cite>Python Cookbook</cite> by David Beazley and Brian K. Jones</li>
-  </ul>
-</section>
 <section class='quick-reference' id='quick-reference' data-title='Quick Reference'>
   <div class='section-kicker'>Quick Reference</div>
   <h2>All 59 Concepts at a Glance</h2>
@@ -6001,178 +6004,340 @@ True</code></pre>
 
 </main></div><button class='back-to-top' id='backToTop' aria-label='Back to top'>&uarr; Top</button>
 <script>
-const navLinks = [...document.querySelectorAll('.group-links a')];
-const internalLinks = [...document.querySelectorAll("a[href^='#']")].filter((link) => {
-  const href = link.getAttribute('href');
-  return Boolean(href && href.length > 1 && document.getElementById(href.slice(1)));
-});
-const trackedSections = [...document.querySelectorAll('.concept-section, #quick-reference, #whats-next')];
-const sidebar = document.getElementById('sidebar');
-const mobileToggle = document.getElementById('mobileToggle');
-const backToTop = document.getElementById('backToTop');
-const darkThemeStylesheet = document.getElementById('darkThemeStylesheet');
-const lightThemeStylesheet = document.getElementById('lightThemeStylesheet');
-const themeButtons = [...document.querySelectorAll('.theme-option')];
-const THEME_STORAGE_KEY = 'python-reference-theme';
-let currentTheme = window.__initialTheme === 'light' ? 'light' : 'dark';
-document.body.dataset.theme = currentTheme;
+document.addEventListener('DOMContentLoaded', () => {
+  const navLinks = [...document.querySelectorAll('.group-links a')];
+  const sidebar = document.getElementById('sidebar');
+  const mobileToggle = document.getElementById('mobileToggle');
+  const backToTop = document.getElementById('backToTop');
+  const darkThemeStylesheet = document.getElementById('darkThemeStylesheet');
+  const lightThemeStylesheet = document.getElementById('lightThemeStylesheet');
+  const themeButtons = [...document.querySelectorAll('.theme-option')];
+  const main = document.querySelector('main');
+  const layerMount = document.getElementById('layerMount');
+  const layerSections = [...document.querySelectorAll("main .concept-section[data-layer][id^='PY']")];
+  const virtualSections = [
+    ...document.querySelectorAll("#dependency-table, main .concept-section[data-layer][id^='PY'], #quick-reference"),
+  ];
+  const layerMarkupById = new Map(
+    virtualSections.map((section) => [section.id, { id: section.id, html: section.outerHTML }]),
+  );
+  const layerIdSet = new Set(layerMarkupById.keys());
+  const THEME_STORAGE_KEY = 'python-reference-theme';
+  let currentTheme = window.__initialTheme === 'light' ? 'light' : 'dark';
+  let currentLayerId = layerSections[0]?.id || virtualSections[0]?.id || '';
+  let activeObserver = null;
+  let renderToken = 0;
 
-function syncThemeButtons(theme) {
-  themeButtons.forEach((button) => {
-    const active = button.dataset.theme === theme;
-    button.classList.toggle('is-active', active);
-    button.setAttribute('aria-pressed', String(active));
-  });
-}
-
-function isTypingTarget(target) {
-  return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
-}
-
-function applyTheme(theme, persist = true) {
-  const nextTheme = theme === 'light' ? 'light' : 'dark';
-  if (nextTheme === currentTheme) {
-    syncThemeButtons(currentTheme);
-    return;
-  }
-  currentTheme = nextTheme;
-  document.documentElement.dataset.theme = currentTheme;
   document.body.dataset.theme = currentTheme;
-  darkThemeStylesheet.media = currentTheme === 'dark' ? 'all' : 'not all';
-  lightThemeStylesheet.media = currentTheme === 'light' ? 'all' : 'not all';
-  syncThemeButtons(currentTheme);
-  if (persist) {
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
-    } catch (error) {
-      // Ignore storage errors and keep the in-memory theme.
+
+  function syncThemeButtons(theme) {
+    themeButtons.forEach((button) => {
+      const active = button.dataset.theme === theme;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  function isTypingTarget(target) {
+    return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+  }
+
+  function applyTheme(theme, persist = true) {
+    const nextTheme = theme === 'light' ? 'light' : 'dark';
+    if (nextTheme === currentTheme) {
+      syncThemeButtons(currentTheme);
+      return;
+    }
+    currentTheme = nextTheme;
+    document.documentElement.dataset.theme = currentTheme;
+    document.body.dataset.theme = currentTheme;
+    darkThemeStylesheet.media = currentTheme === 'dark' ? 'all' : 'not all';
+    lightThemeStylesheet.media = currentTheme === 'light' ? 'all' : 'not all';
+    syncThemeButtons(currentTheme);
+    if (persist) {
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
+      } catch (error) {
+        // Ignore storage errors and keep the in-memory theme.
+      }
     }
   }
-}
 
-function syncLocationHash(hash) {
-  try {
-    if (window.location.hash === hash) {
-      history.replaceState(null, '', hash);
-    } else {
-      history.pushState(null, '', hash);
+  function copyBlockText(pre) {
+    const lineTexts = [...pre.querySelectorAll('.line-text')];
+    if (lineTexts.length) {
+      return lineTexts.map((line) => line.textContent || '').join('\n');
     }
-  } catch (error) {
-    // Ignore URL sync errors when the file is opened locally.
+    return pre.querySelector('code')?.textContent || '';
   }
-}
 
-function scrollToTarget(target, updateHash = true) {
-  if (updateHash) {
-    syncLocationHash(`#${target.id}`);
-  }
-  const top = Math.max(0, Math.round(window.scrollY + target.getBoundingClientRect().top - 18));
-  window.scrollTo(0, top);
-}
-
-function copyBlockText(pre) {
-  const lineTexts = [...pre.querySelectorAll('.line-text')];
-  if (lineTexts.length) {
-    return lineTexts.map((line) => line.textContent || '').join('\n');
-  }
-  return pre.querySelector('code')?.textContent || '';
-}
-
-document.querySelectorAll('pre[data-lang]').forEach((pre) => {
-  const button = document.createElement('button');
-  button.className = 'copy-btn';
-  button.type = 'button';
-  button.textContent = 'Copy';
-  button.addEventListener('click', async () => {
+  async function handleCopyButtonClick(event) {
+    const button = event.currentTarget;
+    const pre = button.closest('pre[data-lang]');
+    if (!pre) {
+      return;
+    }
     const raw = copyBlockText(pre);
     await navigator.clipboard.writeText(raw);
     button.textContent = 'Copied';
     setTimeout(() => { button.textContent = 'Copy'; }, 1200);
+  }
+
+  function bindCopyButtons(root) {
+    root.querySelectorAll('pre[data-lang]').forEach((pre) => {
+      let button = pre.querySelector('.copy-btn');
+      if (!button) {
+        button = document.createElement('button');
+        button.className = 'copy-btn';
+        button.type = 'button';
+        button.textContent = 'Copy';
+        pre.appendChild(button);
+      }
+      if (button.dataset.copyBound === 'true') {
+        return;
+      }
+      button.addEventListener('click', handleCopyButtonClick);
+      button.dataset.copyBound = 'true';
+    });
+  }
+
+  function setActiveNavLink(layerId) {
+    navLinks.forEach((link) => {
+      const active = link.dataset.id === layerId;
+      link.classList.toggle('active', active);
+      if (active) {
+        const group = link.closest('.nav-group');
+        group?.classList.remove('collapsed');
+        group?.querySelector('.group-toggle')?.setAttribute('aria-expanded', 'true');
+      }
+    });
+  }
+
+  function observeTrackedSections() {
+    activeObserver?.disconnect();
+    activeObserver = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+      if (!visible.length) {
+        return;
+      }
+      const current = visible[0].target;
+      navLinks.forEach((link) => {
+        const active = link.getAttribute('href') === `#${current.id}`;
+        link.classList.toggle('active', active);
+        if (active) {
+          const group = link.closest('.nav-group');
+          group?.classList.remove('collapsed');
+          group?.querySelector('.group-toggle')?.setAttribute('aria-expanded', 'true');
+        }
+      });
+    }, { rootMargin: '-18% 0px -58% 0px', threshold: [0.2, 0.45, 0.65] });
+
+    [
+      ...document.querySelectorAll("#dependency-table, main .concept-section[data-layer][id^='PY'], #quick-reference"),
+    ].forEach((section) => activeObserver.observe(section));
+  }
+
+  function reinitializeDynamicSection(newSection) {
+    bindCopyButtons(newSection);
+
+    if (window.mermaid && typeof window.mermaid.init === 'function') {
+      const mermaidBlocks = newSection.querySelectorAll('.mermaid');
+      if (mermaidBlocks.length) {
+        window.mermaid.init(undefined, mermaidBlocks);
+      }
+    }
+
+    if (typeof window.applySyntaxHighlight === 'function') {
+      window.applySyntaxHighlight(newSection);
+    } else if (typeof window.highlightSyntax === 'function') {
+      window.highlightSyntax(newSection);
+    } else if (window.Prism && typeof window.Prism.highlightAllUnder === 'function') {
+      window.Prism.highlightAllUnder(newSection);
+    } else if (window.hljs && typeof window.hljs.highlightElement === 'function') {
+      newSection.querySelectorAll('pre code').forEach((codeBlock) => window.hljs.highlightElement(codeBlock));
+    }
+
+    const revealTargets = [
+      ...(newSection.matches('.revealed') ? [newSection] : []),
+      ...newSection.querySelectorAll('.revealed'),
+    ];
+
+    if (window.__referenceRevealObserver && typeof window.__referenceRevealObserver.observe === 'function') {
+      (revealTargets.length ? revealTargets : [newSection]).forEach((target) => window.__referenceRevealObserver.observe(target));
+    } else if (window.revealObserver && typeof window.revealObserver.observe === 'function') {
+      (revealTargets.length ? revealTargets : [newSection]).forEach((target) => window.revealObserver.observe(target));
+    }
+  }
+
+  function ensureLayerSkeleton() {
+    let skeleton = main.querySelector('.layer-skeleton');
+    if (!skeleton) {
+      skeleton = document.createElement('div');
+      skeleton.className = 'layer-skeleton';
+    }
+    return skeleton;
+  }
+
+  function renderLayer(layerId, options = {}) {
+    if (!layerMarkupById.has(layerId) || !main || !layerMount?.parentNode) {
+      return null;
+    }
+
+    const {
+      pushHistory = true,
+      scrollBehavior = 'smooth',
+    } = options;
+
+    const existing = main.querySelector(`[id="${layerId}"]`);
+    if (existing && currentLayerId === layerId) {
+      setActiveNavLink(layerId);
+      if (pushHistory) {
+        history.pushState({ layerId }, '', `#${layerId}`);
+      }
+      existing.scrollIntoView({ behavior: scrollBehavior, block: 'start' });
+      return existing;
+    }
+
+    const token = ++renderToken;
+    main.classList.add('is-loading');
+    const skeleton = ensureLayerSkeleton();
+
+    if (!skeleton.isConnected) {
+      layerMount.parentNode.insertBefore(skeleton, layerMount);
+    }
+
+    main.querySelectorAll("#dependency-table, main .concept-section[data-layer][id^='PY'], #quick-reference").forEach((section) => section.remove());
+
+    const layerData = layerMarkupById.get(layerId);
+    if (!layerData) {
+      skeleton.remove();
+      main.classList.remove('is-loading');
+      return null;
+    }
+
+    requestAnimationFrame(() => {
+      if (token !== renderToken) {
+        return;
+      }
+
+      const template = document.createElement('template');
+      template.innerHTML = layerData.html.trim();
+      const newSection = template.content.firstElementChild;
+
+      layerMount.parentNode.insertBefore(newSection, layerMount);
+      currentLayerId = layerId;
+      setActiveNavLink(layerId);
+      reinitializeDynamicSection(newSection);
+      observeTrackedSections();
+
+      if (pushHistory) {
+        history.pushState({ layerId }, '', `#${layerId}`);
+      }
+
+      skeleton.remove();
+      main.classList.remove('is-loading');
+      newSection.scrollIntoView({ behavior: scrollBehavior, block: 'start' });
+    });
+
+    return null;
+  }
+
+  bindCopyButtons(document);
+
+  virtualSections.forEach((section) => {
+    if (section.id !== currentLayerId) {
+      section.remove();
+    }
   });
-  pre.appendChild(button);
-});
 
-themeButtons.forEach((button) => {
-  button.addEventListener('click', () => {
-    applyTheme(button.dataset.theme || 'dark');
+  if (currentLayerId) {
+    setActiveNavLink(currentLayerId);
+  }
+
+  observeTrackedSections();
+
+  themeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      applyTheme(button.dataset.theme || 'dark');
+    });
   });
-});
 
-document.querySelectorAll('.group-toggle').forEach((button) => {
-  button.setAttribute('aria-expanded', String(!button.parentElement.classList.contains('collapsed')));
-  button.addEventListener('click', () => {
-    const collapsed = button.parentElement.classList.toggle('collapsed');
-    button.setAttribute('aria-expanded', String(!collapsed));
+  document.querySelectorAll('.group-toggle').forEach((button) => {
+    button.setAttribute('aria-expanded', String(!button.parentElement.classList.contains('collapsed')));
+    button.addEventListener('click', () => {
+      const collapsed = button.parentElement.classList.toggle('collapsed');
+      button.setAttribute('aria-expanded', String(!collapsed));
+    });
   });
-});
 
-mobileToggle.addEventListener('click', () => {
-  sidebar.classList.toggle('open');
-});
+  mobileToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+  });
 
-navLinks.forEach((link) => {
-  link.addEventListener('click', () => {
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest("a[href^='#']");
+    if (!link) {
+      return;
+    }
+
+    const href = link.getAttribute('href');
+    const targetId = href ? href.slice(1) : '';
+    if (!targetId || !layerIdSet.has(targetId)) {
+      return;
+    }
+
+    event.preventDefault();
     if (window.innerWidth < 769) {
       sidebar.classList.remove('open');
     }
+    renderLayer(targetId, { pushHistory: true, scrollBehavior: 'smooth' });
   });
-});
 
-internalLinks.forEach((link) => {
-  link.addEventListener('click', (event) => {
-    const href = link.getAttribute('href');
-    const target = href ? document.getElementById(href.slice(1)) : null;
-    if (!target) {
+  window.addEventListener('popstate', (event) => {
+    const fallbackLayerId = layerSections[0]?.id || '';
+    const layerId = event.state?.layerId || window.location.hash.slice(1) || fallbackLayerId;
+    if (!layerIdSet.has(layerId)) {
+      return;
+    }
+    renderLayer(layerId, { pushHistory: false, scrollBehavior: 'smooth' });
+  });
+
+  const initialLayerId = window.location.hash.slice(1);
+  if (layerIdSet.has(initialLayerId)) {
+    history.replaceState({ layerId: initialLayerId }, '', `#${initialLayerId}`);
+    if (initialLayerId !== currentLayerId) {
+      renderLayer(initialLayerId, { pushHistory: false, scrollBehavior: 'auto' });
+    }
+  } else if (currentLayerId) {
+    history.replaceState({ layerId: currentLayerId }, '', `${window.location.pathname}${window.location.search}`);
+  }
+
+  function updateScrollState() {
+    backToTop.classList.toggle('visible', window.scrollY > 600);
+  }
+
+  backToTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) {
+      return;
+    }
+    if (event.key.toLowerCase() !== 'd') {
+      return;
+    }
+    if (isTypingTarget(event.target)) {
       return;
     }
     event.preventDefault();
-    scrollToTarget(target);
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
   });
+
+  window.addEventListener('scroll', updateScrollState, { passive: true });
+  updateScrollState();
+  syncThemeButtons(currentTheme);
 });
-
-function updateScrollState() {
-  backToTop.classList.toggle('visible', window.scrollY > 600);
-}
-
-const activeObserver = new IntersectionObserver((entries) => {
-  const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-  if (!visible.length) {
-    return;
-  }
-  const current = visible[0].target;
-  navLinks.forEach((link) => {
-    const active = link.getAttribute('href') === `#${current.id}`;
-    link.classList.toggle('active', active);
-    if (active) {
-      const group = link.closest('.nav-group');
-      group?.classList.remove('collapsed');
-      group?.querySelector('.group-toggle')?.setAttribute('aria-expanded', 'true');
-    }
-  });
-}, { rootMargin: '-18% 0px -58% 0px', threshold: [0.2, 0.45, 0.65] });
-trackedSections.forEach((section) => activeObserver.observe(section));
-
-backToTop.addEventListener('click', () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-document.addEventListener('keydown', (event) => {
-  if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) {
-    return;
-  }
-  if (event.key.toLowerCase() !== 'd') {
-    return;
-  }
-  if (isTypingTarget(event.target)) {
-    return;
-  }
-  event.preventDefault();
-  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-});
-
-window.addEventListener('scroll', updateScrollState, { passive: true });
-updateScrollState();
-syncThemeButtons(currentTheme);
 </script>
 
 </body></html>

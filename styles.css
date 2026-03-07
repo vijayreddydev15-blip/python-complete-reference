@@ -2,21 +2,25 @@
   color-scheme: dark;
 }
 
+html,
+body {
+  min-height: 100%;
+  overscroll-behavior-y: none;
+}
+
 html[data-theme='light'] {
   color-scheme: light;
+  background-color: #f7f3ec;
 }
 
 html[data-theme='dark'] {
   color-scheme: dark;
+  background-color: #04050a;
 }
 
 body {
   transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-pre,
-.table-wrap {
-  contain: paint;
+  overflow-x: clip;
 }
 
 .sidebar-top {
@@ -39,7 +43,7 @@ pre,
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
   scrollbar-gutter: stable;
   padding: 0 0.1rem 0.85rem 0;
 }

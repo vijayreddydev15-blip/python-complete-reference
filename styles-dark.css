@@ -65,7 +65,12 @@
 
 /* ── Reset & Base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--surface3) var(--obsidian); }
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface3) var(--obsidian);
+  background-color: var(--void);
+}
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--obsidian); }
 ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
@@ -73,6 +78,7 @@ html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--su
 
 body {
   margin: 0;
+  min-height: 100vh;
   background-color: var(--void);
   background-image:
     url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.028'/%3E%3C/svg%3E"),
@@ -80,6 +86,7 @@ body {
     radial-gradient(ellipse 45% 35% at 88% 100%, rgba(61,255,192,0.05) 0%, transparent 60%),
     radial-gradient(ellipse 30% 25% at 92% 8%, rgba(240,192,96,0.06) 0%, transparent 55%),
     linear-gradient(175deg, #090c16 0%, #04050a 60%);
+  background-attachment: fixed, fixed, fixed, fixed, fixed;
   color: var(--text-1);
   font-family: var(--font-body);
   line-height: var(--lh-body);
