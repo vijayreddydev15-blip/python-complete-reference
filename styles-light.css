@@ -150,7 +150,9 @@ p code, li code, td code {
   position: fixed;
   inset: 0 auto 0 0;
   width: var(--sidebar-w);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: 1.5rem 0.9rem 2rem;
   background: var(--white);
   border-right: 1px solid var(--rim-mid);
@@ -162,6 +164,7 @@ p code, li code, td code {
 .sidebar::before {
   content: '';
   display: block;
+  flex: 0 0 auto;
   height: 3px;
   background: linear-gradient(90deg, var(--forest) 0%, var(--terra) 50%, var(--gold) 100%);
   margin: 0 0 1.5rem;

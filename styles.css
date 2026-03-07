@@ -14,22 +14,14 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.concept-section,
-.resources,
-.quick-reference {
-  content-visibility: auto;
-  contain-intrinsic-size: 1100px;
-}
-
 pre,
 .table-wrap {
   contain: paint;
 }
 
 .sidebar-top {
-  position: sticky;
-  top: 0;
-  z-index: 3;
+  flex: 0 0 auto;
+  position: relative;
   padding: 0 0.15rem 0.95rem;
   margin: -0.2rem -0.05rem 1rem;
 }
@@ -41,6 +33,15 @@ pre,
   right: 0.15rem;
   bottom: 0;
   height: 1px;
+}
+
+.sidebar-nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 0 0.1rem 0.85rem 0;
 }
 
 .theme-switch {
@@ -212,15 +213,12 @@ html[data-theme='light'] .theme-option.is-active {
 }
 
 @media (max-width: 768px) {
-  .concept-section,
-  .resources,
-  .quick-reference {
-    content-visibility: visible;
-    contain-intrinsic-size: auto;
-  }
-
   .sidebar-top {
     padding-top: 3.35rem;
+  }
+
+  .sidebar-nav {
+    padding-bottom: 1.15rem;
   }
 
   .theme-switch {

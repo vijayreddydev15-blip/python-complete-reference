@@ -146,7 +146,9 @@ p code, li code, td code {
   position: fixed;
   inset: 0 auto 0 0;
   width: var(--sidebar-w);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: 1.5rem 0.85rem 2rem;
   background: linear-gradient(180deg, #08091280 0%, #04050a 100%);
   border-right: 1px solid var(--rim);
@@ -157,6 +159,7 @@ p code, li code, td code {
 .sidebar::before {
   content: '';
   display: block;
+  flex: 0 0 auto;
   height: 2px;
   background: linear-gradient(90deg, var(--violet) 0%, var(--gold) 50%, transparent 100%);
   margin: 0 0 1.5rem;

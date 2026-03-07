@@ -2152,9 +2152,20 @@ concepts.extend([
                     def wrapper(*args, **kwargs):
                         start = time.perf_counter()
                         result = func(*args, **kwargs)
-                        print(time.perf_counter() - start)
+                        print(f"{time.perf_counter() - start:.2f}s")
                         return result
                     return wrapper
+
+                measurements = iter([1.0, 1.25])
+                original_perf_counter = time.perf_counter
+                time.perf_counter = lambda: next(measurements)
+
+                @timer
+                def work():
+                    return "done"
+
+                print(work())
+                time.perf_counter = original_perf_counter
                 '''),
                 "`@wraps` preserves metadata like the original function name and docstring.",
             ),
@@ -2177,6 +2188,18 @@ concepts.extend([
                             raise last_error
                         return wrapper
                     return decorate
+
+                attempts = {"count": 0}
+
+                @retry(3)
+                def flaky():
+                    attempts["count"] += 1
+                    if attempts["count"] < 2:
+                        raise ValueError("try again")
+                    return "ok"
+
+                print(flaky())
+                print(attempts["count"])
                 '''),
                 "The outer function handles configuration and the inner function wraps the target.",
             ),
@@ -2197,6 +2220,13 @@ concepts.extend([
                         func()
                         print("B after")
                     return wrapper
+
+                @A
+                @B
+                def greet():
+                    print("hello")
+
+                greet()
                 '''),
                 "Mentally expand stacked decorators as nested function calls to predict execution order.",
             ),
@@ -2302,6 +2332,18 @@ concepts.extend([
                         if not isinstance(value, self.expected_type):
                             raise TypeError("wrong type")
                         setattr(instance, self.storage_name, value)
+
+                class User:
+                    age = TypeEnforced(int)
+                    def __init__(self, age):
+                        self.age = age
+
+                user = User(30)
+                print(user.age)
+                try:
+                    user.age = "old"
+                except TypeError as exc:
+                    print(type(exc).__name__, exc)
                 '''),
                 "The descriptor decides how reads and writes happen for every class that uses it.",
             ),
@@ -2368,6 +2410,7 @@ concepts.extend([
 
                 class Plugin(metaclass=RegisteringMeta):
                     pass
+                print(sorted(registry))
                 '''),
                 "Defining a new class is enough to populate the registry because the metaclass runs during class creation.",
             ),
@@ -2940,6 +2983,8 @@ concepts.extend([
                 async def bad():
                     time.sleep(0.2)
                     return "blocked loop"
+
+                print(asyncio.run(bad()))
                 '''),
                 "Replace blocking work with non-blocking APIs or move it to a thread or executor so other tasks can keep progressing.",
             ),
@@ -2970,6 +3015,10 @@ concepts.extend([
 
                 def find_name(user_id: int) -> Optional[str]:
                     return "Ada" if user_id == 7 else None
+
+                print(user_id)
+                print(find_name(user_id))
+                print(find_name(0))
                 '''),
                 "`Optional[str]` means the function may return `str` or `None`.",
             ),
@@ -2983,6 +3032,9 @@ concepts.extend([
 
                 def first(items: list[T]) -> T:
                     return items[0]
+
+                print(first([10, 20, 30]))
+                print(first(["a", "b", "c"]))
                 '''),
                 "The type variable says the return type matches the element type of the input list.",
             ),
@@ -2994,6 +3046,9 @@ concepts.extend([
 
                 Mode = Literal["r", "w"]
                 Port = Annotated[int, "1..65535"]
+
+                print(Mode)
+                print(Port)
                 '''),
                 "These hints communicate stronger intent to tools and readers, even though plain Python will not enforce them on its own.",
             ),
@@ -3047,6 +3102,12 @@ concepts.extend([
 
                 def shout(name: Optional[str]) -> str:
                     return name.upper()
+
+                print(shout("ada"))
+                try:
+                    print(shout(None))
+                except AttributeError as exc:
+                    print(type(exc).__name__, exc)
                 '''),
                 "A static checker complains because `name` might be `None`. That warning points to a real bug before production users hit it.",
             ),
@@ -3088,6 +3149,11 @@ concepts.extend([
                         self.account = BankAccount(100)
                     def test_deposit(self):
                         self.assertEqual(self.account.deposit(25), 125)
+
+                case = BankAccountTests()
+                case.setUp()
+                case.test_deposit()
+                print("passed")
                 '''),
                 "`setUp` runs before each test method, giving each test a fresh fixture.",
             ),
@@ -3141,6 +3207,9 @@ concepts.extend([
 
                 def test_deposit():
                     assert deposit(100, 25) == 125
+
+                test_deposit()
+                print("passed")
                 '''),
                 "pytest rewrites `assert` to show rich comparison output on failure, so plain asserts become pleasant to use.",
             ),
@@ -3157,6 +3226,10 @@ concepts.extend([
                 @pytest.mark.parametrize("amount, expected", [(25, 125), (0, 100)])
                 def test_deposit(base_balance, amount, expected):
                     assert base_balance + amount == expected
+
+                for amount, expected in [(25, 125), (0, 100)]:
+                    test_deposit(base_balance(), amount, expected)
+                print("all cases passed")
                 '''),
                 "This pattern scales far better than hand-copying almost identical tests.",
             ),
@@ -3164,9 +3237,17 @@ concepts.extend([
                 "`conftest.py` and monkeypatch",
                 "Shared fixtures live in `conftest.py`, and `monkeypatch` lets tests temporarily replace behavior safely.",
                 b('''
+                import os
+                import pytest
+
                 def test_env(monkeypatch):
                     monkeypatch.setenv("APP_MODE", "test")
                     assert True
+
+                mp = pytest.MonkeyPatch()
+                test_env(mp)
+                print(os.environ["APP_MODE"])
+                mp.undo()
                 '''),
                 "Monkeypatching is useful for environment variables, module attributes, and small controlled substitutions during tests.",
             ),
@@ -3323,6 +3404,9 @@ concepts.extend([
                     def __init__(self):
                         self.x = 1
                         self.y = 2
+
+                print(hasattr(Plain(), "__dict__"))
+                print(hasattr(Slotted(), "__dict__"))
                 '''),
                 "Slots trade flexibility for lower per-instance overhead, which can matter a lot at scale.",
             ),
@@ -3913,7 +3997,7 @@ try {
       </div>
     </div>
   </div>
-  __NAV_GROUPS__
+  <nav class='sidebar-nav' aria-label='Python concept navigation'>__NAV_GROUPS__</nav>
 </aside>
 <main>
 <!-- [TASK-1 END] -->
@@ -3969,6 +4053,10 @@ def html_footer() -> str:
 </main></div><button class='back-to-top' id='backToTop' aria-label='Back to top'>&uarr; Top</button>
 <script>
 const navLinks = [...document.querySelectorAll('.group-links a')];
+const internalLinks = [...document.querySelectorAll("a[href^='#']")].filter((link) => {
+  const href = link.getAttribute('href');
+  return Boolean(href && href.length > 1 && document.getElementById(href.slice(1)));
+});
 const trackedSections = [...document.querySelectorAll('.concept-section, #quick-reference, #whats-next')];
 const sidebar = document.getElementById('sidebar');
 const mobileToggle = document.getElementById('mobileToggle');
@@ -4011,6 +4099,26 @@ function applyTheme(theme, persist = true) {
       // Ignore storage errors and keep the in-memory theme.
     }
   }
+}
+
+function syncLocationHash(hash) {
+  try {
+    if (window.location.hash === hash) {
+      history.replaceState(null, '', hash);
+    } else {
+      history.pushState(null, '', hash);
+    }
+  } catch (error) {
+    // Ignore URL sync errors when the file is opened locally.
+  }
+}
+
+function scrollToTarget(target, updateHash = true) {
+  if (updateHash) {
+    syncLocationHash(`#${target.id}`);
+  }
+  const top = Math.max(0, Math.round(window.scrollY + target.getBoundingClientRect().top - 18));
+  window.scrollTo(0, top);
 }
 
 function copyBlockText(pre) {
@@ -4056,6 +4164,18 @@ navLinks.forEach((link) => {
     if (window.innerWidth < 769) {
       sidebar.classList.remove('open');
     }
+  });
+});
+
+internalLinks.forEach((link) => {
+  link.addEventListener('click', (event) => {
+    const href = link.getAttribute('href');
+    const target = href ? document.getElementById(href.slice(1)) : null;
+    if (!target) {
+      return;
+    }
+    event.preventDefault();
+    scrollToTarget(target);
   });
 });
 
