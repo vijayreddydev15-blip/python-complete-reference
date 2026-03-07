@@ -6,8 +6,8 @@
 <title>Python Complete Reference</title>
 <link rel='preconnect' href='https://fonts.googleapis.com'>
 <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
-<link rel='preconnect' href='https://api.fontshare.com' crossorigin>
-<link id='themeStylesheet' rel='stylesheet' href='styles-dark.css'>
+<link id='darkThemeStylesheet' rel='stylesheet' href='styles-dark.css'>
+<link id='lightThemeStylesheet' rel='stylesheet' href='styles-light.css' media='not all'>
 <link rel='stylesheet' href='styles.css'>
 <script>
 try {
@@ -16,7 +16,8 @@ try {
   document.documentElement.dataset.theme = theme;
   window.__initialTheme = theme;
   if (theme === 'light') {
-    document.getElementById('themeStylesheet').href = 'styles-light.css';
+    document.getElementById('darkThemeStylesheet').media = 'not all';
+    document.getElementById('lightThemeStylesheet').media = 'all';
   }
 } catch (error) {
   document.documentElement.dataset.theme = 'dark';
@@ -48,634 +49,9 @@ try {
 <section class='hero' id='top'>
   <div class='section-kicker'>Python Complete Reference</div>
   <h1>Python from Runtime Basics to Expert Practice</h1>
-  <p>This document is ordered as a dependency graph rather than a loose glossary. Each topic appears only after its prerequisites, so you can learn the runtime model, core syntax, data structures, functions, OOP, protocols, packaging, concurrency, testing, and performance in a sequence that does not smuggle in unexplained concepts.</p>
+  <p>This document is ordered by dependencies rather than as a loose glossary. Each topic appears only after its prerequisites, so you can learn the runtime model, core syntax, data structures, functions, OOP, protocols, packaging, concurrency, testing, and performance in a sequence that does not smuggle in unexplained concepts.</p>
   <p>The left sidebar is grouped by layer and highlights the active section as you scroll. Every concept section includes motivation, explanation, mental model, examples, misconceptions, pitfalls, and self-check questions so the file reads like a compact textbook instead of a cheatsheet.</p>
-</section><!-- [TASK-2 START] --><section class='concept-section' id='concept-map' data-title='Concept Map'><div class='section-kicker'>Concept Map</div><h2>Directed Acyclic Graph of Python Concepts</h2><p>Read the graph from left to right. Every node is a concept, every arrow means "learn the source concept before the target concept," and node colors mark the rough learning layer: green for foundations, blue for data/control structures, violet for functions and OOP, amber for advanced runtime protocols, and red for packaging, concurrency, tooling, and advanced engineering practice.</p><div class='dag-wrap'><div class='mermaid'>
-graph LR
-  PY01[PY01: What is Python?]
-  PY02[PY02: Python Installation & the REPL]
-  PY03[PY03: How Python Executes Code]
-  PY04[PY04: Python Versioning]
-  PY05[PY05: Variables, Assignment, and Name Binding]
-  PY06[PY06: Python's Type System]
-  PY07[PY07: Built-in Data Types Overview]
-  PY08[PY08: Operators]
-  PY09[PY09: Strings]
-  PY10[PY10: Lists]
-  PY11[PY11: Tuples]
-  PY12[PY12: Dictionaries]
-  PY13[PY13: Sets & Frozensets]
-  PY14[PY14: The Collections Module]
-  PY15[PY15: Conditionals]
-  PY16[PY16: Loops]
-  PY17[PY17: Comprehensions]
-  PY18[PY18: Exception Handling]
-  PY19[PY19: Functions]
-  PY20[PY20: Arguments Deep-Dive]
-  PY21[PY21: Scope & LEGB Rule]
-  PY22[PY22: Lambda Functions]
-  PY23[PY23: Higher-Order Functions]
-  PY24[PY24: Recursion]
-  PY25[PY25: Classes & Objects]
-  PY26[PY26: The Object Model]
-  PY27[PY27: Inheritance]
-  PY28[PY28: Encapsulation]
-  PY29[PY29: Dunder / Magic Methods]
-  PY30[PY30: Abstract Base Classes and Protocols]
-  PY31[PY31: Dataclasses]
-  PY32[PY32: The Iterator Protocol]
-  PY33[PY33: Generators]
-  PY34[PY34: Coroutines Basics via Generators]
-  PY35[PY35: Decorators]
-  PY36[PY36: Context Managers]
-  PY37[PY37: Descriptors]
-  PY38[PY38: Metaclasses]
-  PY39[PY39: Modules]
-  PY40[PY40: Packages]
-  PY41[PY41: Virtual Environments & Dependency Management]
-  PY42[PY42: File Handling]
-  PY43[PY43: JSON, CSV, pickle]
-  PY44[PY44: pathlib vs os.path]
-  PY45[PY45: Concurrency vs Parallelism vs Asynchrony]
-  PY46[PY46: Threading]
-  PY47[PY47: Multiprocessing]
-  PY48[PY48: asyncio]
-  PY49[PY49: Type Hints]
-  PY50[PY50: Static Analysis]
-  PY51[PY51: unittest]
-  PY52[PY52: pytest]
-  PY53[PY53: Mocking]
-  PY54[PY54: Profiling]
-  PY55[PY55: Python Memory Model Deep-Dive]
-  PY56[PY56: Writing Faster Python]
-  PY57[PY57: Common Design Patterns in Python]
-  PY58[PY58: Python Standard Library Tour]
-  PY59[PY59: Python Anti-Patterns]
-  PY01 --> PY05
-  PY02 --> PY05
-  PY03 --> PY05
-  PY04 --> PY05
-  PY01 --> PY06
-  PY02 --> PY06
-  PY03 --> PY06
-  PY04 --> PY06
-  PY01 --> PY07
-  PY02 --> PY07
-  PY03 --> PY07
-  PY04 --> PY07
-  PY01 --> PY08
-  PY02 --> PY08
-  PY03 --> PY08
-  PY04 --> PY08
-  PY05 --> PY09
-  PY06 --> PY09
-  PY07 --> PY09
-  PY08 --> PY09
-  PY05 --> PY10
-  PY06 --> PY10
-  PY07 --> PY10
-  PY08 --> PY10
-  PY05 --> PY11
-  PY06 --> PY11
-  PY07 --> PY11
-  PY08 --> PY11
-  PY05 --> PY12
-  PY06 --> PY12
-  PY07 --> PY12
-  PY08 --> PY12
-  PY05 --> PY13
-  PY06 --> PY13
-  PY07 --> PY13
-  PY08 --> PY13
-  PY05 --> PY14
-  PY06 --> PY14
-  PY07 --> PY14
-  PY08 --> PY14
-  PY05 --> PY15
-  PY06 --> PY15
-  PY07 --> PY15
-  PY08 --> PY15
-  PY05 --> PY16
-  PY06 --> PY16
-  PY07 --> PY16
-  PY08 --> PY16
-  PY05 --> PY17
-  PY06 --> PY17
-  PY07 --> PY17
-  PY08 --> PY17
-  PY05 --> PY18
-  PY06 --> PY18
-  PY07 --> PY18
-  PY08 --> PY18
-  PY03 --> PY19
-  PY15 --> PY19
-  PY16 --> PY19
-  PY17 --> PY19
-  PY18 --> PY19
-  PY03 --> PY20
-  PY15 --> PY20
-  PY16 --> PY20
-  PY17 --> PY20
-  PY18 --> PY20
-  PY03 --> PY21
-  PY15 --> PY21
-  PY16 --> PY21
-  PY17 --> PY21
-  PY18 --> PY21
-  PY03 --> PY22
-  PY15 --> PY22
-  PY16 --> PY22
-  PY17 --> PY22
-  PY18 --> PY22
-  PY03 --> PY23
-  PY15 --> PY23
-  PY16 --> PY23
-  PY17 --> PY23
-  PY18 --> PY23
-  PY03 --> PY24
-  PY15 --> PY24
-  PY16 --> PY24
-  PY17 --> PY24
-  PY18 --> PY24
-  PY19 --> PY25
-  PY20 --> PY25
-  PY21 --> PY25
-  PY22 --> PY25
-  PY23 --> PY25
-  PY24 --> PY25
-  PY19 --> PY26
-  PY20 --> PY26
-  PY21 --> PY26
-  PY22 --> PY26
-  PY23 --> PY26
-  PY24 --> PY26
-  PY19 --> PY27
-  PY20 --> PY27
-  PY21 --> PY27
-  PY22 --> PY27
-  PY23 --> PY27
-  PY24 --> PY27
-  PY19 --> PY28
-  PY20 --> PY28
-  PY21 --> PY28
-  PY22 --> PY28
-  PY23 --> PY28
-  PY24 --> PY28
-  PY19 --> PY29
-  PY20 --> PY29
-  PY21 --> PY29
-  PY22 --> PY29
-  PY23 --> PY29
-  PY24 --> PY29
-  PY19 --> PY30
-  PY20 --> PY30
-  PY21 --> PY30
-  PY22 --> PY30
-  PY23 --> PY30
-  PY24 --> PY30
-  PY19 --> PY31
-  PY20 --> PY31
-  PY21 --> PY31
-  PY22 --> PY31
-  PY23 --> PY31
-  PY24 --> PY31
-  PY24 --> PY32
-  PY29 --> PY32
-  PY24 --> PY33
-  PY29 --> PY33
-  PY24 --> PY34
-  PY29 --> PY34
-  PY21 --> PY35
-  PY25 --> PY35
-  PY29 --> PY35
-  PY21 --> PY36
-  PY25 --> PY36
-  PY29 --> PY36
-  PY21 --> PY37
-  PY25 --> PY37
-  PY29 --> PY37
-  PY21 --> PY38
-  PY25 --> PY38
-  PY29 --> PY38
-  PY03 --> PY39
-  PY03 --> PY40
-  PY03 --> PY41
-  PY18 --> PY42
-  PY36 --> PY42
-  PY18 --> PY43
-  PY36 --> PY43
-  PY18 --> PY44
-  PY36 --> PY44
-  PY33 --> PY45
-  PY34 --> PY45
-  PY33 --> PY46
-  PY34 --> PY46
-  PY33 --> PY47
-  PY34 --> PY47
-  PY33 --> PY48
-  PY34 --> PY48
-  PY06 --> PY49
-  PY30 --> PY49
-  PY06 --> PY50
-  PY30 --> PY50
-  PY25 --> PY51
-  PY35 --> PY51
-  PY25 --> PY52
-  PY35 --> PY52
-  PY25 --> PY53
-  PY35 --> PY53
-  PY01 --> PY54
-  PY02 --> PY54
-  PY03 --> PY54
-  PY04 --> PY54
-  PY05 --> PY54
-  PY06 --> PY54
-  PY07 --> PY54
-  PY08 --> PY54
-  PY09 --> PY54
-  PY10 --> PY54
-  PY11 --> PY54
-  PY12 --> PY54
-  PY13 --> PY54
-  PY14 --> PY54
-  PY15 --> PY54
-  PY16 --> PY54
-  PY17 --> PY54
-  PY18 --> PY54
-  PY19 --> PY54
-  PY20 --> PY54
-  PY21 --> PY54
-  PY22 --> PY54
-  PY23 --> PY54
-  PY24 --> PY54
-  PY25 --> PY54
-  PY26 --> PY54
-  PY27 --> PY54
-  PY28 --> PY54
-  PY29 --> PY54
-  PY30 --> PY54
-  PY31 --> PY54
-  PY32 --> PY54
-  PY33 --> PY54
-  PY34 --> PY54
-  PY35 --> PY54
-  PY36 --> PY54
-  PY37 --> PY54
-  PY38 --> PY54
-  PY39 --> PY54
-  PY40 --> PY54
-  PY41 --> PY54
-  PY42 --> PY54
-  PY43 --> PY54
-  PY44 --> PY54
-  PY45 --> PY54
-  PY46 --> PY54
-  PY47 --> PY54
-  PY48 --> PY54
-  PY49 --> PY54
-  PY50 --> PY54
-  PY51 --> PY54
-  PY52 --> PY54
-  PY53 --> PY54
-  PY01 --> PY55
-  PY02 --> PY55
-  PY03 --> PY55
-  PY04 --> PY55
-  PY05 --> PY55
-  PY06 --> PY55
-  PY07 --> PY55
-  PY08 --> PY55
-  PY09 --> PY55
-  PY10 --> PY55
-  PY11 --> PY55
-  PY12 --> PY55
-  PY13 --> PY55
-  PY14 --> PY55
-  PY15 --> PY55
-  PY16 --> PY55
-  PY17 --> PY55
-  PY18 --> PY55
-  PY19 --> PY55
-  PY20 --> PY55
-  PY21 --> PY55
-  PY22 --> PY55
-  PY23 --> PY55
-  PY24 --> PY55
-  PY25 --> PY55
-  PY26 --> PY55
-  PY27 --> PY55
-  PY28 --> PY55
-  PY29 --> PY55
-  PY30 --> PY55
-  PY31 --> PY55
-  PY32 --> PY55
-  PY33 --> PY55
-  PY34 --> PY55
-  PY35 --> PY55
-  PY36 --> PY55
-  PY37 --> PY55
-  PY38 --> PY55
-  PY39 --> PY55
-  PY40 --> PY55
-  PY41 --> PY55
-  PY42 --> PY55
-  PY43 --> PY55
-  PY44 --> PY55
-  PY45 --> PY55
-  PY46 --> PY55
-  PY47 --> PY55
-  PY48 --> PY55
-  PY49 --> PY55
-  PY50 --> PY55
-  PY51 --> PY55
-  PY52 --> PY55
-  PY53 --> PY55
-  PY01 --> PY56
-  PY02 --> PY56
-  PY03 --> PY56
-  PY04 --> PY56
-  PY05 --> PY56
-  PY06 --> PY56
-  PY07 --> PY56
-  PY08 --> PY56
-  PY09 --> PY56
-  PY10 --> PY56
-  PY11 --> PY56
-  PY12 --> PY56
-  PY13 --> PY56
-  PY14 --> PY56
-  PY15 --> PY56
-  PY16 --> PY56
-  PY17 --> PY56
-  PY18 --> PY56
-  PY19 --> PY56
-  PY20 --> PY56
-  PY21 --> PY56
-  PY22 --> PY56
-  PY23 --> PY56
-  PY24 --> PY56
-  PY25 --> PY56
-  PY26 --> PY56
-  PY27 --> PY56
-  PY28 --> PY56
-  PY29 --> PY56
-  PY30 --> PY56
-  PY31 --> PY56
-  PY32 --> PY56
-  PY33 --> PY56
-  PY34 --> PY56
-  PY35 --> PY56
-  PY36 --> PY56
-  PY37 --> PY56
-  PY38 --> PY56
-  PY39 --> PY56
-  PY40 --> PY56
-  PY41 --> PY56
-  PY42 --> PY56
-  PY43 --> PY56
-  PY44 --> PY56
-  PY45 --> PY56
-  PY46 --> PY56
-  PY47 --> PY56
-  PY48 --> PY56
-  PY49 --> PY56
-  PY50 --> PY56
-  PY51 --> PY56
-  PY52 --> PY56
-  PY53 --> PY56
-  PY01 --> PY57
-  PY02 --> PY57
-  PY03 --> PY57
-  PY04 --> PY57
-  PY05 --> PY57
-  PY06 --> PY57
-  PY07 --> PY57
-  PY08 --> PY57
-  PY09 --> PY57
-  PY10 --> PY57
-  PY11 --> PY57
-  PY12 --> PY57
-  PY13 --> PY57
-  PY14 --> PY57
-  PY15 --> PY57
-  PY16 --> PY57
-  PY17 --> PY57
-  PY18 --> PY57
-  PY19 --> PY57
-  PY20 --> PY57
-  PY21 --> PY57
-  PY22 --> PY57
-  PY23 --> PY57
-  PY24 --> PY57
-  PY25 --> PY57
-  PY26 --> PY57
-  PY27 --> PY57
-  PY28 --> PY57
-  PY29 --> PY57
-  PY30 --> PY57
-  PY31 --> PY57
-  PY32 --> PY57
-  PY33 --> PY57
-  PY34 --> PY57
-  PY35 --> PY57
-  PY36 --> PY57
-  PY37 --> PY57
-  PY38 --> PY57
-  PY39 --> PY57
-  PY40 --> PY57
-  PY41 --> PY57
-  PY42 --> PY57
-  PY43 --> PY57
-  PY44 --> PY57
-  PY45 --> PY57
-  PY46 --> PY57
-  PY47 --> PY57
-  PY48 --> PY57
-  PY49 --> PY57
-  PY50 --> PY57
-  PY51 --> PY57
-  PY52 --> PY57
-  PY53 --> PY57
-  PY54 --> PY57
-  PY55 --> PY57
-  PY56 --> PY57
-  PY01 --> PY58
-  PY02 --> PY58
-  PY03 --> PY58
-  PY04 --> PY58
-  PY05 --> PY58
-  PY06 --> PY58
-  PY07 --> PY58
-  PY08 --> PY58
-  PY09 --> PY58
-  PY10 --> PY58
-  PY11 --> PY58
-  PY12 --> PY58
-  PY13 --> PY58
-  PY14 --> PY58
-  PY15 --> PY58
-  PY16 --> PY58
-  PY17 --> PY58
-  PY18 --> PY58
-  PY19 --> PY58
-  PY20 --> PY58
-  PY21 --> PY58
-  PY22 --> PY58
-  PY23 --> PY58
-  PY24 --> PY58
-  PY25 --> PY58
-  PY26 --> PY58
-  PY27 --> PY58
-  PY28 --> PY58
-  PY29 --> PY58
-  PY30 --> PY58
-  PY31 --> PY58
-  PY32 --> PY58
-  PY33 --> PY58
-  PY34 --> PY58
-  PY35 --> PY58
-  PY36 --> PY58
-  PY37 --> PY58
-  PY38 --> PY58
-  PY39 --> PY58
-  PY40 --> PY58
-  PY41 --> PY58
-  PY42 --> PY58
-  PY43 --> PY58
-  PY44 --> PY58
-  PY45 --> PY58
-  PY46 --> PY58
-  PY47 --> PY58
-  PY48 --> PY58
-  PY49 --> PY58
-  PY50 --> PY58
-  PY51 --> PY58
-  PY52 --> PY58
-  PY53 --> PY58
-  PY54 --> PY58
-  PY55 --> PY58
-  PY56 --> PY58
-  PY01 --> PY59
-  PY02 --> PY59
-  PY03 --> PY59
-  PY04 --> PY59
-  PY05 --> PY59
-  PY06 --> PY59
-  PY07 --> PY59
-  PY08 --> PY59
-  PY09 --> PY59
-  PY10 --> PY59
-  PY11 --> PY59
-  PY12 --> PY59
-  PY13 --> PY59
-  PY14 --> PY59
-  PY15 --> PY59
-  PY16 --> PY59
-  PY17 --> PY59
-  PY18 --> PY59
-  PY19 --> PY59
-  PY20 --> PY59
-  PY21 --> PY59
-  PY22 --> PY59
-  PY23 --> PY59
-  PY24 --> PY59
-  PY25 --> PY59
-  PY26 --> PY59
-  PY27 --> PY59
-  PY28 --> PY59
-  PY29 --> PY59
-  PY30 --> PY59
-  PY31 --> PY59
-  PY32 --> PY59
-  PY33 --> PY59
-  PY34 --> PY59
-  PY35 --> PY59
-  PY36 --> PY59
-  PY37 --> PY59
-  PY38 --> PY59
-  PY39 --> PY59
-  PY40 --> PY59
-  PY41 --> PY59
-  PY42 --> PY59
-  PY43 --> PY59
-  PY44 --> PY59
-  PY45 --> PY59
-  PY46 --> PY59
-  PY47 --> PY59
-  PY48 --> PY59
-  PY49 --> PY59
-  PY50 --> PY59
-  PY51 --> PY59
-  PY52 --> PY59
-  PY53 --> PY59
-  PY54 --> PY59
-  PY55 --> PY59
-  PY56 --> PY59
-  classDef foundation fill:#1a3a2a,stroke:#4ade80,color:#f0ece2;
-  classDef structures fill:#1a2a3a,stroke:#60a5fa,color:#f0ece2;
-  classDef functions fill:#2a1a3a,stroke:#c084fc,color:#f0ece2;
-  classDef advanced fill:#3a2a1a,stroke:#fb923c,color:#f0ece2;
-  classDef expert fill:#3a1a1a,stroke:#f87171,color:#f0ece2;
-  class PY01 foundation;
-  class PY02 foundation;
-  class PY03 foundation;
-  class PY04 foundation;
-  class PY05 foundation;
-  class PY06 foundation;
-  class PY07 foundation;
-  class PY08 foundation;
-  class PY09 structures;
-  class PY10 structures;
-  class PY11 structures;
-  class PY12 structures;
-  class PY13 structures;
-  class PY14 structures;
-  class PY15 structures;
-  class PY16 structures;
-  class PY17 structures;
-  class PY18 structures;
-  class PY19 functions;
-  class PY20 functions;
-  class PY21 functions;
-  class PY22 functions;
-  class PY23 functions;
-  class PY24 functions;
-  class PY25 functions;
-  class PY26 functions;
-  class PY27 functions;
-  class PY28 functions;
-  class PY29 functions;
-  class PY30 functions;
-  class PY31 functions;
-  class PY32 advanced;
-  class PY33 advanced;
-  class PY34 advanced;
-  class PY35 advanced;
-  class PY36 advanced;
-  class PY37 advanced;
-  class PY38 advanced;
-  class PY39 expert;
-  class PY40 expert;
-  class PY41 expert;
-  class PY42 expert;
-  class PY43 expert;
-  class PY44 expert;
-  class PY45 expert;
-  class PY46 expert;
-  class PY47 expert;
-  class PY48 expert;
-  class PY49 expert;
-  class PY50 expert;
-  class PY51 expert;
-  class PY52 expert;
-  class PY53 expert;
-  class PY54 expert;
-  class PY55 expert;
-  class PY56 expert;
-  class PY57 expert;
-  class PY58 expert;
-  class PY59 expert;
-</div></div><h3>Dependency Table</h3><div class='table-wrap'><table><thead><tr><th>ID</th><th>Concept Name</th><th>Layer</th><th>Direct Prerequisites</th><th>Direct Dependents</th></tr></thead><tbody><tr><td><a href='#PY01'>PY01</a></td><td>What is Python?</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY02'>PY02</a></td><td>Python Installation &amp; the REPL</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY03'>PY03</a></td><td>How Python Executes Code</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY19, PY20, PY21, PY22, PY23, PY24, PY39, PY40, PY41, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY04'>PY04</a></td><td>Python Versioning</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY05'>PY05</a></td><td>Variables, Assignment, and Name Binding</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY06'>PY06</a></td><td>Python&#x27;s Type System</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY49, PY50, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY07'>PY07</a></td><td>Built-in Data Types Overview</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY08'>PY08</a></td><td>Operators</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY09'>PY09</a></td><td>Strings</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY10'>PY10</a></td><td>Lists</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY11'>PY11</a></td><td>Tuples</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY12'>PY12</a></td><td>Dictionaries</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY13'>PY13</a></td><td>Sets &amp; Frozensets</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY14'>PY14</a></td><td>The Collections Module</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY15'>PY15</a></td><td>Conditionals</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY16'>PY16</a></td><td>Loops</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY17'>PY17</a></td><td>Comprehensions</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY18'>PY18</a></td><td>Exception Handling</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY42, PY43, PY44, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY19'>PY19</a></td><td>Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY20'>PY20</a></td><td>Arguments Deep-Dive</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY21'>PY21</a></td><td>Scope &amp; LEGB Rule</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY35, PY36, PY37, PY38, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY22'>PY22</a></td><td>Lambda Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY23'>PY23</a></td><td>Higher-Order Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY24'>PY24</a></td><td>Recursion</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY25'>PY25</a></td><td>Classes &amp; Objects</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY35, PY36, PY37, PY38, PY51, PY52, PY53, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY26'>PY26</a></td><td>The Object Model</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY27'>PY27</a></td><td>Inheritance</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY28'>PY28</a></td><td>Encapsulation</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY29'>PY29</a></td><td>Dunder / Magic Methods</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY30'>PY30</a></td><td>Abstract Base Classes and Protocols</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY49, PY50, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY31'>PY31</a></td><td>Dataclasses</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY32'>PY32</a></td><td>The Iterator Protocol</td><td>6</td><td>PY24, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY33'>PY33</a></td><td>Generators</td><td>6</td><td>PY24, PY29</td><td>PY45, PY46, PY47, PY48, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY34'>PY34</a></td><td>Coroutines Basics via Generators</td><td>6</td><td>PY24, PY29</td><td>PY45, PY46, PY47, PY48, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY35'>PY35</a></td><td>Decorators</td><td>7</td><td>PY21, PY25, PY29</td><td>PY51, PY52, PY53, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY36'>PY36</a></td><td>Context Managers</td><td>7</td><td>PY21, PY25, PY29</td><td>PY42, PY43, PY44, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY37'>PY37</a></td><td>Descriptors</td><td>7</td><td>PY21, PY25, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY38'>PY38</a></td><td>Metaclasses</td><td>7</td><td>PY21, PY25, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY39'>PY39</a></td><td>Modules</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY40'>PY40</a></td><td>Packages</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY41'>PY41</a></td><td>Virtual Environments &amp; Dependency Management</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY42'>PY42</a></td><td>File Handling</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY43'>PY43</a></td><td>JSON, CSV, pickle</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY44'>PY44</a></td><td>pathlib vs os.path</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY45'>PY45</a></td><td>Concurrency vs Parallelism vs Asynchrony</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY46'>PY46</a></td><td>Threading</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY47'>PY47</a></td><td>Multiprocessing</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY48'>PY48</a></td><td>asyncio</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY49'>PY49</a></td><td>Type Hints</td><td>11</td><td>PY06, PY30</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY50'>PY50</a></td><td>Static Analysis</td><td>11</td><td>PY06, PY30</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY51'>PY51</a></td><td>unittest</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY52'>PY52</a></td><td>pytest</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY53'>PY53</a></td><td>Mocking</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY54'>PY54</a></td><td>Profiling</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY55'>PY55</a></td><td>Python Memory Model Deep-Dive</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY56'>PY56</a></td><td>Writing Faster Python</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY57'>PY57</a></td><td>Common Design Patterns in Python</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr><tr><td><a href='#PY58'>PY58</a></td><td>Python Standard Library Tour</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr><tr><td><a href='#PY59'>PY59</a></td><td>Python Anti-Patterns</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr></tbody></table></div></section><!-- [TASK-2 END] --><!-- [TASK-3 START] -->
+</section><!-- [TASK-2 START] --><section class='concept-section' id='dependency-table' data-title='Dependency Table'><div class='section-kicker'>Dependency Table</div><h2>Python Concept Dependencies</h2><p>Use this table as the overview for the reference. Each row shows a concept, the layer it belongs to, the concepts you should understand first, and the concepts that build on it later.</p><div class='table-wrap'><table><thead><tr><th>ID</th><th>Concept Name</th><th>Layer</th><th>Direct Prerequisites</th><th>Direct Dependents</th></tr></thead><tbody><tr><td><a href='#PY01'>PY01</a></td><td>What is Python?</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY02'>PY02</a></td><td>Python Installation &amp; the REPL</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY03'>PY03</a></td><td>How Python Executes Code</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY19, PY20, PY21, PY22, PY23, PY24, PY39, PY40, PY41, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY04'>PY04</a></td><td>Python Versioning</td><td>0</td><td>None</td><td>PY05, PY06, PY07, PY08, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY05'>PY05</a></td><td>Variables, Assignment, and Name Binding</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY06'>PY06</a></td><td>Python&#x27;s Type System</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY49, PY50, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY07'>PY07</a></td><td>Built-in Data Types Overview</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY08'>PY08</a></td><td>Operators</td><td>1</td><td>PY01, PY02, PY03, PY04</td><td>PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY09'>PY09</a></td><td>Strings</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY10'>PY10</a></td><td>Lists</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY11'>PY11</a></td><td>Tuples</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY12'>PY12</a></td><td>Dictionaries</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY13'>PY13</a></td><td>Sets &amp; Frozensets</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY14'>PY14</a></td><td>The Collections Module</td><td>2</td><td>PY05, PY06, PY07, PY08</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY15'>PY15</a></td><td>Conditionals</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY16'>PY16</a></td><td>Loops</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY17'>PY17</a></td><td>Comprehensions</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY18'>PY18</a></td><td>Exception Handling</td><td>3</td><td>PY05, PY06, PY07, PY08</td><td>PY19, PY20, PY21, PY22, PY23, PY24, PY42, PY43, PY44, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY19'>PY19</a></td><td>Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY20'>PY20</a></td><td>Arguments Deep-Dive</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY21'>PY21</a></td><td>Scope &amp; LEGB Rule</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY35, PY36, PY37, PY38, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY22'>PY22</a></td><td>Lambda Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY23'>PY23</a></td><td>Higher-Order Functions</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY24'>PY24</a></td><td>Recursion</td><td>4</td><td>PY03, PY15, PY16, PY17, PY18</td><td>PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY25'>PY25</a></td><td>Classes &amp; Objects</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY35, PY36, PY37, PY38, PY51, PY52, PY53, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY26'>PY26</a></td><td>The Object Model</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY27'>PY27</a></td><td>Inheritance</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY28'>PY28</a></td><td>Encapsulation</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY29'>PY29</a></td><td>Dunder / Magic Methods</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY30'>PY30</a></td><td>Abstract Base Classes and Protocols</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY49, PY50, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY31'>PY31</a></td><td>Dataclasses</td><td>5</td><td>PY19, PY20, PY21, PY22, PY23, PY24</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY32'>PY32</a></td><td>The Iterator Protocol</td><td>6</td><td>PY24, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY33'>PY33</a></td><td>Generators</td><td>6</td><td>PY24, PY29</td><td>PY45, PY46, PY47, PY48, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY34'>PY34</a></td><td>Coroutines Basics via Generators</td><td>6</td><td>PY24, PY29</td><td>PY45, PY46, PY47, PY48, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY35'>PY35</a></td><td>Decorators</td><td>7</td><td>PY21, PY25, PY29</td><td>PY51, PY52, PY53, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY36'>PY36</a></td><td>Context Managers</td><td>7</td><td>PY21, PY25, PY29</td><td>PY42, PY43, PY44, PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY37'>PY37</a></td><td>Descriptors</td><td>7</td><td>PY21, PY25, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY38'>PY38</a></td><td>Metaclasses</td><td>7</td><td>PY21, PY25, PY29</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY39'>PY39</a></td><td>Modules</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY40'>PY40</a></td><td>Packages</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY41'>PY41</a></td><td>Virtual Environments &amp; Dependency Management</td><td>8</td><td>PY03</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY42'>PY42</a></td><td>File Handling</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY43'>PY43</a></td><td>JSON, CSV, pickle</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY44'>PY44</a></td><td>pathlib vs os.path</td><td>9</td><td>PY18, PY36</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY45'>PY45</a></td><td>Concurrency vs Parallelism vs Asynchrony</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY46'>PY46</a></td><td>Threading</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY47'>PY47</a></td><td>Multiprocessing</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY48'>PY48</a></td><td>asyncio</td><td>10</td><td>PY33, PY34</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY49'>PY49</a></td><td>Type Hints</td><td>11</td><td>PY06, PY30</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY50'>PY50</a></td><td>Static Analysis</td><td>11</td><td>PY06, PY30</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY51'>PY51</a></td><td>unittest</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY52'>PY52</a></td><td>pytest</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY53'>PY53</a></td><td>Mocking</td><td>12</td><td>PY25, PY35</td><td>PY54, PY55, PY56, PY57, PY58, PY59</td></tr><tr><td><a href='#PY54'>PY54</a></td><td>Profiling</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY55'>PY55</a></td><td>Python Memory Model Deep-Dive</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY56'>PY56</a></td><td>Writing Faster Python</td><td>13</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53</td><td>PY57, PY58, PY59</td></tr><tr><td><a href='#PY57'>PY57</a></td><td>Common Design Patterns in Python</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr><tr><td><a href='#PY58'>PY58</a></td><td>Python Standard Library Tour</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr><tr><td><a href='#PY59'>PY59</a></td><td>Python Anti-Patterns</td><td>14</td><td>PY01, PY02, PY03, PY04, PY05, PY06, PY07, PY08, PY09, PY10, PY11, PY12, PY13, PY14, PY15, PY16, PY17, PY18, PY19, PY20, PY21, PY22, PY23, PY24, PY25, PY26, PY27, PY28, PY29, PY30, PY31, PY32, PY33, PY34, PY35, PY36, PY37, PY38, PY39, PY40, PY41, PY42, PY43, PY44, PY45, PY46, PY47, PY48, PY49, PY50, PY51, PY52, PY53, PY54, PY55, PY56</td><td>None</td></tr></tbody></table></div></section><!-- [TASK-2 END] --><!-- [TASK-3 START] -->
 <section id="PY01" class="concept-section" data-layer="0" data-title="What is Python?">
   <div class="section-kicker">PY01 &middot; Layer 0 &middot; Runtime &amp; Environment</div>
   <h2>What is Python?</h2>
@@ -741,7 +117,7 @@ graph LR
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does What is Python? solve?</summary><div>Python exists so humans can automate real work with readable code, a large standard library, and a runtime model that stays inspectable instead of hidden behind opaque tooling.</div></details><details class='self-check'><summary>What mental model should you picture for What is Python??</summary><div>How the Python pipeline turns source into running code, Why CPython is the baseline implementation, What the GIL means at a high level before the threading deep-dive</div></details><details class='self-check'><summary>When should you limit or avoid What is Python??</summary><div>Python could have forced ahead-of-time compilation or manual memory management, but its design favors fast feedback. CPython wins by compatibility, PyPy by JIT speed on some workloads, and Jython by Java ecosystem access.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY02">Next concept &rarr; PY02</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY02">Next concept &rarr; PY02</a></div>
 </section>
 
 <section id="PY02" class="concept-section" data-layer="0" data-title="Python Installation &amp; the REPL">
@@ -809,7 +185,7 @@ graph LR
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Python Installation &amp; the REPL solve?</summary><div>A fast feedback loop matters because beginners and experts both need a safe place to test assumptions before committing code to a file or a larger application.</div></details><details class='self-check'><summary>What mental model should you picture for Python Installation &amp; the REPL?</summary><div>How the OS finds the interpreter through PATH, the `py` launcher, and shebang lines, Why the REPL is a learning tool, not just a toy, How `_`, `help()`, `dir()`, and `type()` help you discover behavior</div></details><details class='self-check'><summary>When should you limit or avoid Python Installation &amp; the REPL?</summary><div>You can write everything in files, but skipping the REPL slows learning because every tiny experiment becomes a save-run-debug loop.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY03">Next concept &rarr; PY03</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY03">Next concept &rarr; PY03</a></div>
 </section>
 
 <section id="PY03" class="concept-section" data-layer="0" data-title="How Python Executes Code">
@@ -877,7 +253,7 @@ graph LR
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does How Python Executes Code solve?</summary><div>Execution models matter because debugging is easier when you know whether a failure comes from parsing, compilation, name lookup, or runtime behavior.</div></details><details class='self-check'><summary>What mental model should you picture for How Python Executes Code?</summary><div>What the lexer, parser, AST, bytecode, and PVM each do, How `ast.parse()` and `dis.dis()` expose the execution pipeline, Why `.pyc` files and `__pycache__` exist</div></details><details class='self-check'><summary>When should you limit or avoid How Python Executes Code?</summary><div>Python could have hidden all of this behind a black box, but exposing ASTs, code objects, and disassembly makes tooling, debugging, and teaching much easier.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY04">Next concept &rarr; PY04</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY04">Next concept &rarr; PY04</a></div>
 </section>
 
 <section id="PY04" class="concept-section" data-layer="0" data-title="Python Versioning">
@@ -945,7 +321,7 @@ graph LR
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Python Versioning solve?</summary><div>Versions matter because examples that work in Python 3.12 may fail in Python 3.8, and many confusing tutorials on the internet still mix Python 2 syntax into Python 3 discussions.</div></details><details class='self-check'><summary>What mental model should you picture for Python Versioning?</summary><div>How Python 1, 2, and 3 fit on a timeline, What PEPs are and why they shape the language, How to check language features against the running version</div></details><details class='self-check'><summary>When should you limit or avoid Python Versioning?</summary><div>Python could have kept every Python 2 behavior forever, but breaking compatibility in Python 3 fixed Unicode handling, cleaned up syntax, and removed long-term design debt.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY05">Next concept &rarr; PY05</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY05">Next concept &rarr; PY05</a></div>
 </section>
 
 <section id="PY05" class="concept-section" data-layer="1" data-title="Variables, Assignment, and Name Binding">
@@ -1014,7 +390,7 @@ graph LR
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Variables, Assignment, and Name Binding solve?</summary><div>Python uses name binding so objects can be passed around cheaply, shared intentionally, and rebound without pretending that names physically contain values.</div></details><details class='self-check'><summary>What mental model should you picture for Variables, Assignment, and Name Binding?</summary><div>Why names and objects are separate ideas, How aliasing explains shared mutations, Where multiple assignment and unpacking are useful and where they bite</div></details><details class='self-check'><summary>When should you limit or avoid Variables, Assignment, and Name Binding?</summary><div>Some languages model variables as typed storage slots. Python chooses flexible name binding because objects carry their own type and lifetime information.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY06">Next concept &rarr; PY06</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY06">Next concept &rarr; PY06</a></div>
 </section>
 
 <section id="PY06" class="concept-section" data-layer="1" data-title="Python&#x27;s Type System">
@@ -1083,7 +459,7 @@ operations ask the object what behavior it supports at runtime</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Python&#x27;s Type System solve?</summary><div>The type system exists to let code stay flexible without silently gluing incompatible values together in ways that hide mistakes.</div></details><details class='self-check'><summary>What mental model should you picture for Python&#x27;s Type System?</summary><div>What dynamic typing means at runtime, Why duck typing values behavior over declarations, How strong typing prevents silent coercion bugs</div></details><details class='self-check'><summary>When should you limit or avoid Python&#x27;s Type System?</summary><div>Python could have required declarations everywhere or copied JavaScript-style coercion. It chooses dynamic behavior with strong runtime checks to keep code flexible without making bugs invisible.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY07">Next concept &rarr; PY07</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY07">Next concept &rarr; PY07</a></div>
 </section>
 
 <section id="PY07" class="concept-section" data-layer="1" data-title="Built-in Data Types Overview">
@@ -1151,7 +527,7 @@ operations ask the object what behavior it supports at runtime</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Built-in Data Types Overview solve?</summary><div>These built-ins exist so common tasks have precise runtime meanings: whole numbers, approximate decimals, text, raw bytes, truth values, and the explicit absence of a value.</div></details><details class='self-check'><summary>What mental model should you picture for Built-in Data Types Overview?</summary><div>What `int`, `float`, `complex`, `bool`, `str`, `bytes`, and `NoneType` are for, How to inspect size and type information, Where floating-point surprises and singleton behavior come from</div></details><details class='self-check'><summary>When should you limit or avoid Built-in Data Types Overview?</summary><div>Python keeps these primitives distinct because pretending text, bytes, integers, and floats are interchangeable leads to subtle bugs, especially around encoding and numeric precision.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY08">Next concept &rarr; PY08</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY08">Next concept &rarr; PY08</a></div>
 </section>
 
 <section id="PY08" class="concept-section" data-layer="1" data-title="Operators">
@@ -1219,7 +595,7 @@ operations ask the object what behavior it supports at runtime</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Operators solve?</summary><div>Operators exist because some actions are so common that function-call syntax would be noisy, but compact syntax only works if you understand the exact question each operator asks.</div></details><details class='self-check'><summary>What mental model should you picture for Operators?</summary><div>How arithmetic, comparison, logical, identity, membership, and assignment operators behave, Why `is` and `==` are different questions, Where short-circuiting and the walrus operator are useful</div></details><details class='self-check'><summary>When should you limit or avoid Operators?</summary><div>Python could have made operators perform more implicit coercion, but it keeps them explicit because operator-heavy bugs are hard to spot once the code gets dense.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY09">Next concept &rarr; PY09</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY09">Next concept &rarr; PY09</a></div>
 </section>
 <!-- [TASK-3 END] --><!-- [TASK-4 START] -->
 <section id="PY09" class="concept-section" data-layer="2" data-title="Strings">
@@ -1289,7 +665,7 @@ decode() -&gt; string again</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Strings solve?</summary><div>Text processing is everywhere, so Python separates text from bytes and makes string operations predictable instead of mixing encoding concerns into every line.</div></details><details class='self-check'><summary>What mental model should you picture for Strings?</summary><div>How Unicode text differs from encoded bytes, Why strings are immutable and how slicing and formatting work, When to choose f-strings, `.format()`, `%`, raw strings, or multiline literals</div></details><details class='self-check'><summary>When should you limit or avoid Strings?</summary><div>Python could have blurred text and bytes into one type, but Python 3 deliberately separates them because encoding bugs are easier to fix when the distinction is explicit.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY10">Next concept &rarr; PY10</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY10">Next concept &rarr; PY10</a></div>
 </section>
 
 <section id="PY10" class="concept-section" data-layer="2" data-title="Lists">
@@ -1357,7 +733,7 @@ decode() -&gt; string again</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Lists solve?</summary><div>Programs need a resizable sequence for &#x27;zero or more items&#x27;. Lists fill that role, trading memory overhead for flexible mutation and fast append behavior.</div></details><details class='self-check'><summary>What mental model should you picture for Lists?</summary><div>How list mutability affects aliasing and slice assignment, When comprehensions beat loops and when they do not, Why copying nested lists requires more than `copy()`</div></details><details class='self-check'><summary>When should you limit or avoid Lists?</summary><div>If you need fixed-size homogeneous storage, a list is often the wrong tool. Python keeps lists general on purpose so everyday code stays simple.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY11">Next concept &rarr; PY11</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY11">Next concept &rarr; PY11</a></div>
 </section>
 
 <section id="PY11" class="concept-section" data-layer="2" data-title="Tuples">
@@ -1426,7 +802,7 @@ may still point at mutable inner objects</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Tuples solve?</summary><div>A fixed-shape container solves a different problem than a list: it communicates &#x27;this set of positions belongs together and usually should not be resized&#x27;.</div></details><details class='self-check'><summary>What mental model should you picture for Tuples?</summary><div>Why immutability makes tuples useful, How packing and unpacking improve readability, Why tuple contents can still reference mutable objects</div></details><details class='self-check'><summary>When should you limit or avoid Tuples?</summary><div>Lists are better when shape changes frequently. Tuples are better when the positions have meaning and the record should stay structurally stable.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY12">Next concept &rarr; PY12</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY12">Next concept &rarr; PY12</a></div>
 </section>
 
 <section id="PY12" class="concept-section" data-layer="2" data-title="Dictionaries">
@@ -1495,7 +871,7 @@ collisions handled internally by the dict implementation</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Dictionaries solve?</summary><div>Keyed lookup is fundamental because many real problems are not &#x27;the third item in a list&#x27; but &#x27;the setting named timeout&#x27; or &#x27;the user with this email&#x27;.</div></details><details class='self-check'><summary>What mental model should you picture for Dictionaries?</summary><div>How hashing lets key lookup stay fast on average, When to use `dict[]`, `get()`, merging, and comprehensions, Why `defaultdict` and JSON round-trips are common patterns</div></details><details class='self-check'><summary>When should you limit or avoid Dictionaries?</summary><div>Python could have offered only list-based lookups and forced manual searches, but hash maps are too central to everyday programming to omit.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY13">Next concept &rarr; PY13</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY13">Next concept &rarr; PY13</a></div>
 </section>
 
 <section id="PY13" class="concept-section" data-layer="2" data-title="Sets &amp; Frozensets">
@@ -1564,7 +940,7 @@ no duplicates, no positional indexing</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Sets &amp; Frozensets solve?</summary><div>Many problems are really about &#x27;have I seen this before?&#x27; or &#x27;what overlaps between these groups?&#x27; Sets express that directly instead of forcing linear scans through lists.</div></details><details class='self-check'><summary>What mental model should you picture for Sets &amp; Frozensets?</summary><div>Why uniqueness and membership tests are the main set use cases, How union, intersection, difference, and symmetric difference work, When `frozenset` is useful because immutability makes it hashable</div></details><details class='self-check'><summary>When should you limit or avoid Sets &amp; Frozensets?</summary><div>Use a list when order and duplicates matter. Use a set when the core question is uniqueness or membership.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY14">Next concept &rarr; PY14</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY14">Next concept &rarr; PY14</a></div>
 </section>
 
 <section id="PY14" class="concept-section" data-layer="2" data-title="The Collections Module">
@@ -1632,7 +1008,7 @@ no duplicates, no positional indexing</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does The Collections Module solve?</summary><div>Specialized containers exist because general-purpose containers force you to re-implement the same patterns repeatedly: queues, counting, layered config, and stable reordering.</div></details><details class='self-check'><summary>What mental model should you picture for The Collections Module?</summary><div>Why `deque`, `Counter`, `defaultdict`, `ChainMap`, and `OrderedDict` exist, How specialized containers reduce boilerplate, When named tuples are more expressive than raw tuples</div></details><details class='self-check'><summary>When should you limit or avoid The Collections Module?</summary><div>You can always force these patterns into plain dicts and lists, but that usually produces more code and weaker intent.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY15">Next concept &rarr; PY15</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY15">Next concept &rarr; PY15</a></div>
 </section>
 <!-- [TASK-4 END] --><!-- [TASK-5 START] -->
 <section id="PY15" class="concept-section" data-layer="3" data-title="Conditionals">
@@ -1701,7 +1077,7 @@ pattern matching -&gt; compare shape and values -&gt; bind pieces if matched</co
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Conditionals solve?</summary><div>Branching exists because programs react to state. The important question is not &#x27;can I branch?&#x27; but &#x27;what form makes the decision obvious to the next reader?&#x27;.</div></details><details class='self-check'><summary>What mental model should you picture for Conditionals?</summary><div>How `if/elif/else` and ternary expressions work, When `match/case` is clearer than a long chain of comparisons, Why nested ternaries become unreadable quickly</div></details><details class='self-check'><summary>When should you limit or avoid Conditionals?</summary><div>Pattern matching is powerful, but `if/elif` remains the best tool when the logic is just a few unrelated boolean checks.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY16">Next concept &rarr; PY16</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY16">Next concept &rarr; PY16</a></div>
 </section>
 
 <section id="PY16" class="concept-section" data-layer="3" data-title="Loops">
@@ -1770,7 +1146,7 @@ loop else runs only if no break happened</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Loops solve?</summary><div>Loops exist because real work often means &#x27;do this for every item&#x27; or &#x27;keep trying until the state changes&#x27;. Python builds looping on the iterator protocol so one syntax can drive many container types.</div></details><details class='self-check'><summary>What mental model should you picture for Loops?</summary><div>Why Python&#x27;s `for` loop is built on iteration rather than integer counters, How `break`, `continue`, `pass`, and loop `else` behave, Why `enumerate()` and `zip()` are more Pythonic than `range(len(...))`</div></details><details class='self-check'><summary>When should you limit or avoid Loops?</summary><div>You can always force a counter-based loop, but Python prefers direct iteration because it matches the data model and eliminates many off-by-one bugs.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY17">Next concept &rarr; PY17</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY17">Next concept &rarr; PY17</a></div>
 </section>
 
 <section id="PY17" class="concept-section" data-layer="3" data-title="Comprehensions">
@@ -1838,7 +1214,7 @@ loop else runs only if no break happened</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Comprehensions solve?</summary><div>Comprehensions exist because the pattern &#x27;iterate, transform, maybe filter, append&#x27; is so common that spelling it with full loops adds noise when the logic is simple.</div></details><details class='self-check'><summary>What mental model should you picture for Comprehensions?</summary><div>How list, dict, and set comprehensions map cleanly to simple loops, When generator expressions save memory, When a comprehension becomes too dense to be worth it</div></details><details class='self-check'><summary>When should you limit or avoid Comprehensions?</summary><div>Once a comprehension contains deep nesting, side effects, or complicated branching, a normal loop is usually clearer and easier to debug.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY18">Next concept &rarr; PY18</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY18">Next concept &rarr; PY18</a></div>
 </section>
 
 <section id="PY18" class="concept-section" data-layer="3" data-title="Exception Handling">
@@ -1907,7 +1283,7 @@ try block -&gt; exception? -&gt; matching except -&gt; optional else if none -&g
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Exception Handling solve?</summary><div>Programs fail in ways you cannot completely predict: missing files, bad input, network errors, logic mistakes. Exceptions let Python surface those failures without forcing every function to return error codes manually.</div></details><details class='self-check'><summary>What mental model should you picture for Exception Handling?</summary><div>How `try`, `except`, `else`, and `finally` fit together, Why broad exception handling hides bugs, How custom exceptions and chaining communicate causes clearly</div></details><details class='self-check'><summary>When should you limit or avoid Exception Handling?</summary><div>Returning sentinel values for every failure quickly becomes noisy and easy to ignore. Exceptions keep the success path cleaner while preserving full error context.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY19">Next concept &rarr; PY19</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY19">Next concept &rarr; PY19</a></div>
 </section>
 <!-- [TASK-5 END] --><!-- [TASK-6 START] -->
 <section id="PY19" class="concept-section" data-layer="4" data-title="Functions">
@@ -1975,7 +1351,7 @@ try block -&gt; exception? -&gt; matching except -&gt; optional else if none -&g
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Functions solve?</summary><div>Functions exist so programs can name reusable behavior, test pieces independently, and compose larger systems without repeating the same steps line by line.</div></details><details class='self-check'><summary>What mental model should you picture for Functions?</summary><div>How `def`, `return`, and the call stack fit together, Why functions are first-class objects in Python, Why mutable default arguments are evaluated once at definition time</div></details><details class='self-check'><summary>When should you limit or avoid Functions?</summary><div>Functions do not replace every pattern. When behavior and state need to travel together, a class or closure can be the better abstraction.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY20">Next concept &rarr; PY20</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY20">Next concept &rarr; PY20</a></div>
 </section>
 
 <section id="PY20" class="concept-section" data-layer="4" data-title="Arguments Deep-Dive">
@@ -2043,7 +1419,7 @@ try block -&gt; exception? -&gt; matching except -&gt; optional else if none -&g
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Arguments Deep-Dive solve?</summary><div>Function signatures are contracts. Python gives you tools to make those contracts explicit so callers cannot accidentally rely on argument styles you never meant to support.</div></details><details class='self-check'><summary>What mental model should you picture for Arguments Deep-Dive?</summary><div>The exact parameter-ordering rules in a function signature, Why positional-only `/` and keyword-only `*` exist, How call-site unpacking with `*` and `**` works</div></details><details class='self-check'><summary>When should you limit or avoid Arguments Deep-Dive?</summary><div>More flexibility is not always better. Overusing `*args` and `**kwargs` can make APIs vague and hard for tools and humans to understand.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY21">Next concept &rarr; PY21</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY21">Next concept &rarr; PY21</a></div>
 </section>
 
 <section id="PY21" class="concept-section" data-layer="4" data-title="Scope &amp; LEGB Rule">
@@ -2112,7 +1488,7 @@ first matching name wins</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Scope &amp; LEGB Rule solve?</summary><div>Scope rules exist so Python can decide which object a name should refer to without forcing every reference to be fully qualified.</div></details><details class='self-check'><summary>What mental model should you picture for Scope &amp; LEGB Rule?</summary><div>How Python walks outward through scopes during name lookup, Why closures capture names rather than snapshots of values, When `global` and `nonlocal` are appropriate</div></details><details class='self-check'><summary>When should you limit or avoid Scope &amp; LEGB Rule?</summary><div>Global state is easy to reach but hard to reason about. Closures and explicit arguments are usually safer than reaching for `global` by default.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY22">Next concept &rarr; PY22</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY22">Next concept &rarr; PY22</a></div>
 </section>
 
 <section id="PY22" class="concept-section" data-layer="4" data-title="Lambda Functions">
@@ -2181,7 +1557,7 @@ no statements, only one expression result</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Lambda Functions solve?</summary><div>Lambdas exist so tiny functions can be written inline at the point of use, but Python keeps them intentionally limited so they do not turn into unreadable mini-programs.</div></details><details class='self-check'><summary>What mental model should you picture for Lambda Functions?</summary><div>What lambdas are good for and where they stop, Why lambdas cannot contain statements, Why named functions are better once behavior grows</div></details><details class='self-check'><summary>When should you limit or avoid Lambda Functions?</summary><div>Use lambdas for tiny one-off callables. The moment you need comments, branching, or a meaningful name, switch to `def`.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY23">Next concept &rarr; PY23</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY23">Next concept &rarr; PY23</a></div>
 </section>
 
 <section id="PY23" class="concept-section" data-layer="4" data-title="Higher-Order Functions">
@@ -2249,7 +1625,7 @@ no statements, only one expression result</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Higher-Order Functions solve?</summary><div>Once functions are first-class, you can parameterize behavior itself instead of hard-coding every decision into one giant function.</div></details><details class='self-check'><summary>What mental model should you picture for Higher-Order Functions?</summary><div>How `map`, `filter`, `reduce`, `sorted(key=...)`, and `partial` fit one model, Why caching is also a higher-order function pattern, When `operator` helpers beat tiny lambdas</div></details><details class='self-check'><summary>When should you limit or avoid Higher-Order Functions?</summary><div>Higher-order tools are powerful, but a straightforward loop is often clearer when the transformation or filtering logic is long.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY24">Next concept &rarr; PY24</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY24">Next concept &rarr; PY24</a></div>
 </section>
 
 <section id="PY24" class="concept-section" data-layer="4" data-title="Recursion">
@@ -2318,7 +1694,7 @@ returns unwind in reverse order</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Recursion solve?</summary><div>Some problems are naturally self-similar: tree traversal, directory walking, recursive descent parsing. Recursion mirrors that structure directly.</div></details><details class='self-check'><summary>What mental model should you picture for Recursion?</summary><div>How recursive calls create a stack of frames, Why a missing base case or too much depth fails in CPython, How memoization and explicit stacks compare</div></details><details class='self-check'><summary>When should you limit or avoid Recursion?</summary><div>Recursion is elegant when the structure is recursive. It is a poor fit when iterative code is flatter, clearer, or guaranteed to avoid deep call stacks.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY25">Next concept &rarr; PY25</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY25">Next concept &rarr; PY25</a></div>
 </section>
 <!-- [TASK-6 END] --><!-- [TASK-7 START] -->
 <section id="PY25" class="concept-section" data-layer="5" data-title="Classes &amp; Objects">
@@ -2386,7 +1762,7 @@ returns unwind in reverse order</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Classes &amp; Objects solve?</summary><div>Once functions alone stop being enough, you need a way to keep related state and behavior together. Classes are Python&#x27;s built-in tool for that job.</div></details><details class='self-check'><summary>What mental model should you picture for Classes &amp; Objects?</summary><div>How class bodies execute and produce class objects, Why `self` refers to the receiving instance, How instance and class attributes participate in lookup</div></details><details class='self-check'><summary>When should you limit or avoid Classes &amp; Objects?</summary><div>A plain function plus a dict can sometimes be enough. Reach for a class when the relationship between state and behavior is central, not incidental.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY26">Next concept &rarr; PY26</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY26">Next concept &rarr; PY26</a></div>
 </section>
 
 <section id="PY26" class="concept-section" data-layer="5" data-title="The Object Model">
@@ -2455,7 +1831,7 @@ CPython tracks references and runs cyclic GC for loops of references</code></pre
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does The Object Model solve?</summary><div>The object model matters because Python exposes it directly. Many advanced features are just ordinary object operations once you see that everything participates in the same system.</div></details><details class='self-check'><summary>What mental model should you picture for The Object Model?</summary><div>Why `id()`, `type()`, and `is` belong together, How reference counting and cyclic garbage collection interact in CPython, Why object identity is separate from object equality</div></details><details class='self-check'><summary>When should you limit or avoid The Object Model?</summary><div>Identity questions (`is`) are narrower than equality questions (`==`). Use identity only when you truly care about sameness of object, such as with `None` or shared sentinels.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY27">Next concept &rarr; PY27</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY27">Next concept &rarr; PY27</a></div>
 </section>
 
 <section id="PY27" class="concept-section" data-layer="5" data-title="Inheritance">
@@ -2524,7 +1900,7 @@ super() walks that order cooperatively</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Inheritance solve?</summary><div>Inheritance exists because some abstractions are genuine specializations of others, but Python gives you both inheritance and composition because reuse alone is not enough to justify an inheritance tree.</div></details><details class='self-check'><summary>What mental model should you picture for Inheritance?</summary><div>How single and multiple inheritance differ, Why `super()` follows the MRO instead of &#x27;just call my parent&#x27;, When composition is simpler than inheritance</div></details><details class='self-check'><summary>When should you limit or avoid Inheritance?</summary><div>Use inheritance when the subtype relationship is real and cooperative method dispatch adds value. Use composition when you mainly want to assemble behavior.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY28">Next concept &rarr; PY28</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY28">Next concept &rarr; PY28</a></div>
 </section>
 
 <section id="PY28" class="concept-section" data-layer="5" data-title="Encapsulation">
@@ -2594,7 +1970,7 @@ __double -&gt; name-mangled to reduce accidental clashes</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Encapsulation solve?</summary><div>Encapsulation exists to protect invariants and communicate intended use. Python chooses social and technical tools together instead of pretending enforcement is absolute.</div></details><details class='self-check'><summary>What mental model should you picture for Encapsulation?</summary><div>What `_name` and `__name` really mean, How `@property` provides computed access and validation, Why `__slots__` can reduce per-instance memory</div></details><details class='self-check'><summary>When should you limit or avoid Encapsulation?</summary><div>Python avoids rigid access modifiers because conventions plus properties are often enough, and strict barriers would clash with introspection-heavy workflows.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY29">Next concept &rarr; PY29</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY29">Next concept &rarr; PY29</a></div>
 </section>
 
 <section id="PY29" class="concept-section" data-layer="5" data-title="Dunder / Magic Methods">
@@ -2662,7 +2038,7 @@ __double -&gt; name-mangled to reduce accidental clashes</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Dunder / Magic Methods solve?</summary><div>These hooks exist so your objects can feel native in the language instead of forcing every interaction through ad hoc method names.</div></details><details class='self-check'><summary>What mental model should you picture for Dunder / Magic Methods?</summary><div>How operators and built-ins dispatch to special methods, Which dunder methods control printing, iteration, comparison, arithmetic, and context management, Why dunder methods should preserve user expectations</div></details><details class='self-check'><summary>When should you limit or avoid Dunder / Magic Methods?</summary><div>Only implement dunder methods that make semantic sense. A surprising `__len__` or `__eq__` is worse than omitting the hook.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY30">Next concept &rarr; PY30</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY30">Next concept &rarr; PY30</a></div>
 </section>
 
 <section id="PY30" class="concept-section" data-layer="5" data-title="Abstract Base Classes and Protocols">
@@ -2731,7 +2107,7 @@ Protocol -&gt; object only needs matching methods/attributes</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Abstract Base Classes and Protocols solve?</summary><div>Interfaces matter because larger programs need shared expectations about behavior, but Python offers both explicit inheritance and structural compatibility depending on the style of code you want.</div></details><details class='self-check'><summary>What mental model should you picture for Abstract Base Classes and Protocols?</summary><div>How `ABC` and `@abstractmethod` enforce nominal contracts, Why `Protocol` fits duck-typed code better, What `@runtime_checkable` changes</div></details><details class='self-check'><summary>When should you limit or avoid Abstract Base Classes and Protocols?</summary><div>Choose ABCs when explicit hierarchy membership matters. Choose protocols when you want interface documentation that still respects duck typing.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY31">Next concept &rarr; PY31</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY31">Next concept &rarr; PY31</a></div>
 </section>
 
 <section id="PY31" class="concept-section" data-layer="5" data-title="Dataclasses">
@@ -2799,7 +2175,7 @@ Protocol -&gt; object only needs matching methods/attributes</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Dataclasses solve?</summary><div>A lot of classes are mostly data containers with validation. Dataclasses remove the boilerplate so you can focus on the fields and invariants instead of hand-writing the same methods every time.</div></details><details class='self-check'><summary>What mental model should you picture for Dataclasses?</summary><div>When a dataclass is better than a plain class or named tuple, How `field()` and `default_factory` handle defaults safely, Why `frozen=True` and `slots=True` matter</div></details><details class='self-check'><summary>When should you limit or avoid Dataclasses?</summary><div>Dataclasses are not mandatory. If behavior dominates over stored fields, a regular class is often clearer. If you need tuple-like compactness, `namedtuple` can still be enough.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY32">Next concept &rarr; PY32</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY32">Next concept &rarr; PY32</a></div>
 </section>
 <!-- [TASK-7 END] --><!-- [TASK-8 START] -->
 <section id="PY32" class="concept-section" data-layer="6" data-title="The Iterator Protocol">
@@ -2867,7 +2243,7 @@ Protocol -&gt; object only needs matching methods/attributes</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does The Iterator Protocol solve?</summary><div>Iteration exists so one loop syntax can consume lists, files, generators, custom classes, and more without hard-coding a container type into the language.</div></details><details class='self-check'><summary>What mental model should you picture for The Iterator Protocol?</summary><div>How `for` loops desugar to `iter()` and `next()`, Why `StopIteration` signals normal exhaustion, How to build a custom iterable from scratch</div></details><details class='self-check'><summary>When should you limit or avoid The Iterator Protocol?</summary><div>Implement the protocol only when you need custom iteration behavior. For one-off lazy sequences, generators are usually simpler.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY33">Next concept &rarr; PY33</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY33">Next concept &rarr; PY33</a></div>
 </section>
 
 <section id="PY33" class="concept-section" data-layer="6" data-title="Generators">
@@ -2936,7 +2312,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Generators solve?</summary><div>Generators exist because many sequences are too large, too slow, or even infinite to materialize all at once.</div></details><details class='self-check'><summary>What mental model should you picture for Generators?</summary><div>Why lazy evaluation saves memory, How `yield` and `yield from` work, Where generator expressions fit into data pipelines</div></details><details class='self-check'><summary>When should you limit or avoid Generators?</summary><div>If you need random access, repeated traversal, or the full data set immediately, a list may still be the better tool.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY34">Next concept &rarr; PY34</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY34">Next concept &rarr; PY34</a></div>
 </section>
 
 <section id="PY34" class="concept-section" data-layer="6" data-title="Coroutines Basics via Generators">
@@ -3004,7 +2380,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Coroutines Basics via Generators solve?</summary><div>These generator capabilities matter because they prove a paused computation can be resumed from the outside, which is the conceptual bridge toward modern asynchronous programming.</div></details><details class='self-check'><summary>What mental model should you picture for Coroutines Basics via Generators?</summary><div>How generator coroutines differ from simple pull-based iteration, What `send()`, `throw()`, and `close()` do, Why this model set the stage for `asyncio`</div></details><details class='self-check'><summary>When should you limit or avoid Coroutines Basics via Generators?</summary><div>Today you should usually write new asynchronous code with `async`/`await`, but generator coroutines explain the historical model underneath.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY35">Next concept &rarr; PY35</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY35">Next concept &rarr; PY35</a></div>
 </section>
 
 <section id="PY35" class="concept-section" data-layer="7" data-title="Decorators">
@@ -3072,7 +2448,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Decorators solve?</summary><div>Decorators exist because cross-cutting behavior like timing, retries, caching, logging, or access control should not require copy-pasting the same scaffolding into every function.</div></details><details class='self-check'><summary>What mental model should you picture for Decorators?</summary><div>How wrapper functions use closures and `@wraps`, Why decorator stacking applies from the inside out, How decorators with arguments differ from simple decorators</div></details><details class='self-check'><summary>When should you limit or avoid Decorators?</summary><div>Decorators are elegant for reusable wrapping behavior, but if the wrapper logic becomes hard to debug, a plain function call or explicit helper object may be clearer.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY36">Next concept &rarr; PY36</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY36">Next concept &rarr; PY36</a></div>
 </section>
 
 <section id="PY36" class="concept-section" data-layer="7" data-title="Context Managers">
@@ -3140,7 +2516,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Context Managers solve?</summary><div>Resource lifetimes are easy to get wrong when cleanup must happen even on exceptions. Context managers put that cleanup rule in one place.</div></details><details class='self-check'><summary>What mental model should you picture for Context Managers?</summary><div>Why `with` is safer than manual setup and teardown, How class-based and generator-based context managers differ, When `ExitStack` helps with dynamic resource counts</div></details><details class='self-check'><summary>When should you limit or avoid Context Managers?</summary><div>Use plain `try/finally` when a one-off cleanup is simpler than creating a reusable context manager object.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY37">Next concept &rarr; PY37</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY37">Next concept &rarr; PY37</a></div>
 </section>
 
 <section id="PY37" class="concept-section" data-layer="7" data-title="Descriptors">
@@ -3208,7 +2584,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Descriptors solve?</summary><div>Descriptors exist because attribute access is a fundamental operation in Python, and some attributes need behavior rather than dumb storage.</div></details><details class='self-check'><summary>What mental model should you picture for Descriptors?</summary><div>How descriptors power `property`, functions-as-methods, and many ORM field systems, When each descriptor hook runs, How custom descriptors centralize validation logic</div></details><details class='self-check'><summary>When should you limit or avoid Descriptors?</summary><div>Most projects should start with `@property`. Reach for custom descriptors when the same access policy must be reused across many attributes or classes.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY38">Next concept &rarr; PY38</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY38">Next concept &rarr; PY38</a></div>
 </section>
 
 <section id="PY38" class="concept-section" data-layer="7" data-title="Metaclasses">
@@ -3276,7 +2652,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Metaclasses solve?</summary><div>Metaclasses exist because some frameworks need to inspect or modify classes at definition time, but that is a much rarer need than ordinary instance behavior.</div></details><details class='self-check'><summary>What mental model should you picture for Metaclasses?</summary><div>Why `type` is the metaclass of most classes, How metaclass `__new__` and `__init__` run during class creation, Why `__init_subclass__` is often a simpler alternative</div></details><details class='self-check'><summary>When should you limit or avoid Metaclasses?</summary><div>You almost never need a metaclass. They are powerful, but they multiply complexity quickly and can interact badly with multiple inheritance and tooling.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY39">Next concept &rarr; PY39</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY39">Next concept &rarr; PY39</a></div>
 </section>
 <!-- [TASK-8 END] --><!-- [TASK-9 START] -->
 <section id="PY39" class="concept-section" data-layer="8" data-title="Modules">
@@ -3344,7 +2720,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Modules solve?</summary><div>Modules exist so code can be organized into files with explicit names instead of one giant global namespace.</div></details><details class='self-check'><summary>What mental model should you picture for Modules?</summary><div>How `import` loads and caches modules, Why `__name__ == &quot;__main__&quot;` matters, How circular imports arise and how to break them</div></details><details class='self-check'><summary>When should you limit or avoid Modules?</summary><div>Too many tiny modules can also hurt readability. Split code where the namespace and dependency boundary help, not just because a file got a little long.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY40">Next concept &rarr; PY40</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY40">Next concept &rarr; PY40</a></div>
 </section>
 
 <section id="PY40" class="concept-section" data-layer="8" data-title="Packages">
@@ -3412,7 +2788,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Packages solve?</summary><div>Packages exist because once one file is not enough, you need a way to structure many modules into a coherent API surface.</div></details><details class='self-check'><summary>What mental model should you picture for Packages?</summary><div>How absolute and relative imports differ inside packages, What namespace packages are, What `__all__` actually affects</div></details><details class='self-check'><summary>When should you limit or avoid Packages?</summary><div>Relative imports can be handy inside a package, but overusing them can make large codebases harder to navigate than explicit absolute imports.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY41">Next concept &rarr; PY41</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY41">Next concept &rarr; PY41</a></div>
 </section>
 
 <section id="PY41" class="concept-section" data-layer="8" data-title="Virtual Environments &amp; Dependency Management">
@@ -3480,7 +2856,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Virtual Environments &amp; Dependency Management solve?</summary><div>Dependency isolation matters because Python projects share an interpreter by default, and shared global installs quickly become a conflict factory.</div></details><details class='self-check'><summary>What mental model should you picture for Virtual Environments &amp; Dependency Management?</summary><div>Why `venv` changes import resolution, What `pyproject.toml` standardizes, Why editable installs matter during development</div></details><details class='self-check'><summary>When should you limit or avoid Virtual Environments &amp; Dependency Management?</summary><div>Global installs are fine for throwaway experiments. For real projects, isolation is cheap insurance against version conflicts and machine-to-machine drift.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY42">Next concept &rarr; PY42</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY42">Next concept &rarr; PY42</a></div>
 </section>
 
 <section id="PY42" class="concept-section" data-layer="9" data-title="File Handling">
@@ -3548,7 +2924,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does File Handling solve?</summary><div>Programs need durable storage, but operating systems expose files as byte streams. Python adds text decoding, buffering, and safe cleanup on top.</div></details><details class='self-check'><summary>What mental model should you picture for File Handling?</summary><div>How `open()` modes affect reading and writing, Why explicit encoding matters in text mode, How binary mode works with structured bytes</div></details><details class='self-check'><summary>When should you limit or avoid File Handling?</summary><div>Use text mode for human-readable files and binary mode for precise byte-level formats. Mixing the two mental models causes subtle corruption bugs.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY43">Next concept &rarr; PY43</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY43">Next concept &rarr; PY43</a></div>
 </section>
 
 <section id="PY43" class="concept-section" data-layer="9" data-title="JSON, CSV, pickle">
@@ -3616,7 +2992,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does JSON, CSV, pickle solve?</summary><div>Programs exchange data with humans, spreadsheets, APIs, caches, and queues. One representation never fits every audience, so Python offers multiple serialization tools.</div></details><details class='self-check'><summary>What mental model should you picture for JSON, CSV, pickle?</summary><div>When to choose JSON, CSV, or pickle, Why custom encoders are sometimes needed for JSON, Why unpickling untrusted data is dangerous</div></details><details class='self-check'><summary>When should you limit or avoid JSON, CSV, pickle?</summary><div>Choose the format that matches the audience: JSON for interoperable APIs, CSV for table-shaped text, and pickle only for trusted Python-to-Python persistence.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY44">Next concept &rarr; PY44</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY44">Next concept &rarr; PY44</a></div>
 </section>
 
 <section id="PY44" class="concept-section" data-layer="9" data-title="pathlib vs os.path">
@@ -3684,7 +3060,7 @@ next() resumes until next yield or StopIteration</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does pathlib vs os.path solve?</summary><div>Path handling is everywhere, and string concatenation is a brittle way to express filesystem intent across operating systems.</div></details><details class='self-check'><summary>What mental model should you picture for pathlib vs os.path?</summary><div>Why object-oriented paths are easier to compose, How path arithmetic with `/` improves readability, Where `glob`, `rglob`, and `iterdir` fit</div></details><details class='self-check'><summary>When should you limit or avoid pathlib vs os.path?</summary><div>`os.path` still works and appears in older code, but `pathlib` is usually the clearer default for new Python applications.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY45">Next concept &rarr; PY45</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY45">Next concept &rarr; PY45</a></div>
 </section>
 
 <section id="PY45" class="concept-section" data-layer="10" data-title="Concurrency vs Parallelism vs Asynchrony">
@@ -3753,7 +3129,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Concurrency vs Parallelism vs Asynchrony solve?</summary><div>These distinctions matter because using the wrong concurrency model can make code slower, harder to debug, or both.</div></details><details class='self-check'><summary>What mental model should you picture for Concurrency vs Parallelism vs Asynchrony?</summary><div>How CPU-bound and I/O-bound workloads differ, Why threads, processes, and event loops solve different problems, How to choose the right model before writing code</div></details><details class='self-check'><summary>When should you limit or avoid Concurrency vs Parallelism vs Asynchrony?</summary><div>Do not pick a concurrency tool because it sounds advanced. Start with the workload shape, then choose the minimum model that matches it.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY46">Next concept &rarr; PY46</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY46">Next concept &rarr; PY46</a></div>
 </section>
 
 <section id="PY46" class="concept-section" data-layer="10" data-title="Threading">
@@ -3821,7 +3197,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Threading solve?</summary><div>Threads exist because overlapping waiting is valuable, and many operating-system or C-extension operations release the GIL while work is in progress.</div></details><details class='self-check'><summary>What mental model should you picture for Threading?</summary><div>What the GIL protects and what it does not, Why threads are still useful for I/O-bound work, How locks and coordination primitives avoid races</div></details><details class='self-check'><summary>When should you limit or avoid Threading?</summary><div>Threads are often the simplest fix for I/O overlap, but once shared-state complexity dominates, a queue-based or process-based design may be easier to reason about.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY47">Next concept &rarr; PY47</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY47">Next concept &rarr; PY47</a></div>
 </section>
 
 <section id="PY47" class="concept-section" data-layer="10" data-title="Multiprocessing">
@@ -3889,7 +3265,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Multiprocessing solve?</summary><div>Separate processes matter because CPU-bound Python work often needs more than concurrency; it needs multiple interpreters running at once.</div></details><details class='self-check'><summary>What mental model should you picture for Multiprocessing?</summary><div>Why separate processes bypass the GIL, How pools, queues, pipes, and shared memory differ, Why picklability matters when sending work to workers</div></details><details class='self-check'><summary>When should you limit or avoid Multiprocessing?</summary><div>Processes buy true parallelism, but startup cost, memory duplication, and serialization overhead mean they are not the answer to every workload.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY48">Next concept &rarr; PY48</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY48">Next concept &rarr; PY48</a></div>
 </section>
 
 <section id="PY48" class="concept-section" data-layer="10" data-title="asyncio">
@@ -3957,7 +3333,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does asyncio solve?</summary><div>Async I/O exists because one thread can often manage many waiting network tasks efficiently if code cooperates instead of blocking.</div></details><details class='self-check'><summary>What mental model should you picture for asyncio?</summary><div>How the event loop schedules coroutines, Why blocking the loop is the cardinal async mistake, When `gather`, `wait`, and `TaskGroup` differ</div></details><details class='self-check'><summary>When should you limit or avoid asyncio?</summary><div>Async code is not automatically faster. It shines when many tasks spend time waiting on network or other async-compatible I/O.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY49">Next concept &rarr; PY49</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY49">Next concept &rarr; PY49</a></div>
 </section>
 
 <section id="PY49" class="concept-section" data-layer="11" data-title="Type Hints">
@@ -4025,7 +3401,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Type Hints solve?</summary><div>Large codebases need machine-checkable documentation about data flow. Type hints provide that without giving up Python&#x27;s dynamic runtime.</div></details><details class='self-check'><summary>What mental model should you picture for Type Hints?</summary><div>How basic annotations, unions, literals, generics, and protocols fit together, Why type variables and parameter specs matter for reusable APIs, How hints improve tooling without changing runtime semantics by themselves</div></details><details class='self-check'><summary>When should you limit or avoid Type Hints?</summary><div>Hints should clarify APIs, not drown them in ceremony. Type every detail only when the extra precision actually helps readers or tools catch mistakes.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY50">Next concept &rarr; PY50</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY50">Next concept &rarr; PY50</a></div>
 </section>
 
 <section id="PY50" class="concept-section" data-layer="11" data-title="Static Analysis">
@@ -4093,7 +3469,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Static Analysis solve?</summary><div>Static analysis matters because some bugs are easier and cheaper to catch from source code shape than from production failures.</div></details><details class='self-check'><summary>What mental model should you picture for Static Analysis?</summary><div>Why type hints alone do nothing at runtime, How static tools catch bugs before execution, When mypy and pyright differ in workflow and emphasis</div></details><details class='self-check'><summary>When should you limit or avoid Static Analysis?</summary><div>Use static analysis as an assistant, not a religion. pyright is often faster and editor-friendly; mypy remains deeply configurable and widely adopted.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY51">Next concept &rarr; PY51</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY51">Next concept &rarr; PY51</a></div>
 </section>
 <!-- [TASK-9 END] --><!-- [TASK-10 START] -->
 <section id="PY51" class="concept-section" data-layer="12" data-title="unittest">
@@ -4161,7 +3537,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does unittest solve?</summary><div>Tests exist so code changes can be checked automatically. `unittest` provides a standard structure that ships with Python itself.</div></details><details class='self-check'><summary>What mental model should you picture for unittest?</summary><div>How `TestCase` organizes tests, What `setUp`, `tearDown`, and class-level fixtures do, Why assertion methods communicate intent better than plain `assert` in this framework</div></details><details class='self-check'><summary>When should you limit or avoid unittest?</summary><div>`unittest` is reliable and standard, but many teams prefer pytest because it removes more boilerplate while staying compatible with much of the same ecosystem.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY52">Next concept &rarr; PY52</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY52">Next concept &rarr; PY52</a></div>
 </section>
 
 <section id="PY52" class="concept-section" data-layer="12" data-title="pytest">
@@ -4229,7 +3605,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does pytest solve?</summary><div>pytest exists because test code should be easy to write and easy to read. It removes ceremony so the test intent stays front and center.</div></details><details class='self-check'><summary>What mental model should you picture for pytest?</summary><div>Why pytest usually feels lighter than `unittest`, How fixtures and parametrization scale test setup, Where `conftest.py` and monkeypatching fit</div></details><details class='self-check'><summary>When should you limit or avoid pytest?</summary><div>pytest is usually the better default for new projects, but `unittest` knowledge still matters because the stdlib and older codebases use it heavily.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY53">Next concept &rarr; PY53</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY53">Next concept &rarr; PY53</a></div>
 </section>
 
 <section id="PY53" class="concept-section" data-layer="12" data-title="Mocking">
@@ -4297,7 +3673,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Mocking solve?</summary><div>Mocks exist because real networks, clocks, payment gateways, and file systems make tests slow, flaky, or expensive when the unit under test does not need the real dependency.</div></details><details class='self-check'><summary>What mental model should you picture for Mocking?</summary><div>How `Mock`, `MagicMock`, and `patch` differ, Why patch location matters, How over-mocking can make tests meaningless</div></details><details class='self-check'><summary>When should you limit or avoid Mocking?</summary><div>Mock the parts that make the test slow or unstable, not every single dependency. Otherwise you end up testing your mocks instead of your code.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY54">Next concept &rarr; PY54</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY54">Next concept &rarr; PY54</a></div>
 </section>
 
 <section id="PY54" class="concept-section" data-layer="13" data-title="Profiling">
@@ -4365,7 +3741,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Profiling solve?</summary><div>Performance work without measurement is mostly storytelling. Profilers turn vague suspicions into concrete hotspots.</div></details><details class='self-check'><summary>What mental model should you picture for Profiling?</summary><div>How `cProfile` summarizes call costs, What line-level profilers add, Why memory profiling matters separately from CPU time</div></details><details class='self-check'><summary>When should you limit or avoid Profiling?</summary><div>Profile before optimizing and again after optimizing. Without the second measurement, you do not know whether the change actually helped.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY55">Next concept &rarr; PY55</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY55">Next concept &rarr; PY55</a></div>
 </section>
 
 <section id="PY55" class="concept-section" data-layer="13" data-title="Python Memory Model Deep-Dive">
@@ -4433,7 +3809,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Python Memory Model Deep-Dive solve?</summary><div>Memory behavior leaks into performance and even semantics, especially around identity, caching, and object lifetime.</div></details><details class='self-check'><summary>What mental model should you picture for Python Memory Model Deep-Dive?</summary><div>Why small integers and some strings may be interned, How reference counting and cyclic GC divide the work, Where `__slots__` can materially reduce memory usage</div></details><details class='self-check'><summary>When should you limit or avoid Python Memory Model Deep-Dive?</summary><div>Do not write correctness logic around caching or interning. Those are optimizations. Treat them as implementation details unless you are measuring performance.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY56">Next concept &rarr; PY56</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY56">Next concept &rarr; PY56</a></div>
 </section>
 
 <section id="PY56" class="concept-section" data-layer="13" data-title="Writing Faster Python">
@@ -4501,7 +3877,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Writing Faster Python solve?</summary><div>Most performance wins come from changing the shape of the work, not shaving nanoseconds off the wrong loop.</div></details><details class='self-check'><summary>What mental model should you picture for Writing Faster Python?</summary><div>Why O(n log n) beats clever O(n²) code, How local lookups and comprehensions can help a little, When to move numeric heavy lifting to vectorized libraries</div></details><details class='self-check'><summary>When should you limit or avoid Writing Faster Python?</summary><div>Benchmark representative workloads, not tiny artificial fragments detached from the real program.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY57">Next concept &rarr; PY57</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY57">Next concept &rarr; PY57</a></div>
 </section>
 
 <section id="PY57" class="concept-section" data-layer="14" data-title="Common Design Patterns in Python">
@@ -4569,7 +3945,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Common Design Patterns in Python solve?</summary><div>Patterns matter because recurring design problems deserve shared vocabulary, but Python often solves them with fewer moving parts than more ceremony-heavy languages.</div></details><details class='self-check'><summary>What mental model should you picture for Common Design Patterns in Python?</summary><div>How Pythonic implementations differ from textbook UML-heavy versions, Where singleton, factory, observer, strategy, and repository patterns show up, Why patterns are tools, not badges of sophistication</div></details><details class='self-check'><summary>When should you limit or avoid Common Design Patterns in Python?</summary><div>Use patterns to clarify design, not to impress yourself. If a plain function or dict solves the problem cleanly, that is the better pattern for Python.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY58">Next concept &rarr; PY58</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY58">Next concept &rarr; PY58</a></div>
 </section>
 
 <section id="PY58" class="concept-section" data-layer="14" data-title="Python Standard Library Tour">
@@ -4637,7 +4013,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Python Standard Library Tour solve?</summary><div>Python&#x27;s batteries-included philosophy matters because many tasks are already solved well enough without reaching for another dependency first.</div></details><details class='self-check'><summary>What mental model should you picture for Python Standard Library Tour?</summary><div>Which modules solve common real-world problems out of the box, How `itertools`, `functools`, `contextlib`, `enum`, `typing`, and others complement the core language, Why the stdlib is one of Python&#x27;s biggest strengths</div></details><details class='self-check'><summary>When should you limit or avoid Python Standard Library Tour?</summary><div>Before adding a dependency, check whether the standard library already solves the problem well enough. It often does.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#PY59">Next concept &rarr; PY59</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#PY59">Next concept &rarr; PY59</a></div>
 </section>
 
 <section id="PY59" class="concept-section" data-layer="14" data-title="Python Anti-Patterns">
@@ -4705,7 +4081,7 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
             
   <h3>Self-Check Questions</h3>
   <details class='self-check'><summary>What problem does Python Anti-Patterns solve?</summary><div>Anti-patterns matter because avoiding a few traps saves disproportionate amounts of debugging time.</div></details><details class='self-check'><summary>What mental model should you picture for Python Anti-Patterns?</summary><div>Why mutable defaults, bare excepts, and `import *` keep hurting people, How `is None` and `isinstance` express the right questions, Why performance anti-patterns often start as innocent-looking loops</div></details><details class='self-check'><summary>When should you limit or avoid Python Anti-Patterns?</summary><div>Most anti-patterns come from fighting the language model instead of working with it. Learn the model once and many bugs disappear.</div></details>
-  <div class="section-footer"><a class="prev-link" href="#concept-map">Back to Concept Map</a><a class="next-link" href="#quick-reference">Next concept &rarr; quick-reference</a></div>
+  <div class="section-footer"><a class="prev-link" href="#dependency-table">Back to Dependency Table</a><a class="next-link" href="#quick-reference">Next concept &rarr; quick-reference</a></div>
 </section>
 <!-- [TASK-10 END] -->
 <section class='resources' id='whats-next' data-title='What's Next?'>
@@ -4728,16 +4104,14 @@ CPU work -&gt; parallel processes or native extensions help more</code></pre>
 
 <!-- [TASK-11 START] -->
 </main></div><button class='back-to-top' id='backToTop' aria-label='Back to top'>&uarr; Top</button>
-<script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
 <script>
-document.body.classList.add('enhanced');
 const navLinks = [...document.querySelectorAll('.group-links a')];
 const trackedSections = [...document.querySelectorAll('.concept-section, #quick-reference, #whats-next')];
-const revealSections = [...document.querySelectorAll('.hero, .concept-section, .resources, .quick-reference')];
 const sidebar = document.getElementById('sidebar');
 const mobileToggle = document.getElementById('mobileToggle');
 const backToTop = document.getElementById('backToTop');
-const themeStylesheet = document.getElementById('themeStylesheet');
+const darkThemeStylesheet = document.getElementById('darkThemeStylesheet');
+const lightThemeStylesheet = document.getElementById('lightThemeStylesheet');
 const themeButtons = [...document.querySelectorAll('.theme-option')];
 const THEME_STORAGE_KEY = 'python-reference-theme';
 let currentTheme = window.__initialTheme === 'light' ? 'light' : 'dark';
@@ -4755,31 +4129,17 @@ function isTypingTarget(target) {
   return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 }
 
-async function renderMermaid(theme) {
-  const nodes = [...document.querySelectorAll('.mermaid')];
-  if (!nodes.length) {
+function applyTheme(theme, persist = true) {
+  const nextTheme = theme === 'light' ? 'light' : 'dark';
+  if (nextTheme === currentTheme) {
+    syncThemeButtons(currentTheme);
     return;
   }
-  nodes.forEach((node) => {
-    if (!node.dataset.graph) {
-      node.dataset.graph = node.textContent || '';
-    }
-    node.removeAttribute('data-processed');
-    node.innerHTML = node.dataset.graph;
-  });
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: theme === 'light' ? 'neutral' : 'dark',
-    flowchart: { useMaxWidth: true, nodeSpacing: 36, rankSpacing: 130 },
-  });
-  await mermaid.run({ querySelector: '.mermaid' });
-}
-
-async function applyTheme(theme, persist = true) {
-  currentTheme = theme === 'light' ? 'light' : 'dark';
+  currentTheme = nextTheme;
   document.documentElement.dataset.theme = currentTheme;
   document.body.dataset.theme = currentTheme;
-  themeStylesheet.href = currentTheme === 'light' ? 'styles-light.css' : 'styles-dark.css';
+  darkThemeStylesheet.media = currentTheme === 'dark' ? 'all' : 'not all';
+  lightThemeStylesheet.media = currentTheme === 'light' ? 'all' : 'not all';
   syncThemeButtons(currentTheme);
   if (persist) {
     try {
@@ -4788,7 +4148,6 @@ async function applyTheme(theme, persist = true) {
       // Ignore storage errors and keep the in-memory theme.
     }
   }
-  await renderMermaid(currentTheme);
 }
 
 function copyBlockText(pre) {
@@ -4815,7 +4174,7 @@ document.querySelectorAll('pre[data-lang]').forEach((pre) => {
 
 themeButtons.forEach((button) => {
   button.addEventListener('click', () => {
-    applyTheme(button.dataset.theme || 'dark').catch(() => {});
+    applyTheme(button.dataset.theme || 'dark');
   });
 });
 
@@ -4857,15 +4216,6 @@ const activeObserver = new IntersectionObserver((entries) => {
 }, { rootMargin: '-18% 0px -58% 0px', threshold: [0.2, 0.45, 0.65] });
 trackedSections.forEach((section) => activeObserver.observe(section));
 
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('revealed');
-    }
-  });
-}, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
-revealSections.forEach((section) => revealObserver.observe(section));
-
 backToTop.addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
@@ -4881,13 +4231,12 @@ document.addEventListener('keydown', (event) => {
     return;
   }
   event.preventDefault();
-  applyTheme(currentTheme === 'dark' ? 'light' : 'dark').catch(() => {});
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
 });
 
 window.addEventListener('scroll', updateScrollState, { passive: true });
 updateScrollState();
 syncThemeButtons(currentTheme);
-renderMermaid(currentTheme).catch(() => {});
 </script>
 <!-- [TASK-11 END] -->
 </body></html>

@@ -5,8 +5,6 @@
    Palette: Ivory/cream base, deep forest ink, terracotta accent, cool slate
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
-
 :root {
   /* ── Core Palette ── */
   --paper:     #f7f3ec;
@@ -59,9 +57,9 @@
   --r-lg: 20px;
 
   /* ── Typography ── */
-  --font-head: 'Playfair Display', 'Georgia', serif;
-  --font-body: 'Source Serif 4', 'Georgia', serif;
-  --font-code: 'IBM Plex Mono', 'Courier New', monospace;
+  --font-head: 'Fraunces', 'Georgia', serif;
+  --font-body: 'Lora', 'Georgia', serif;
+  --font-code: 'JetBrains Mono', 'Courier New', monospace;
   --lh-body: 1.82;
   --lh-tight: 1.12;
   --lh-code: 1.7;
@@ -559,17 +557,6 @@ pre.has-lines code { white-space: normal; }
   transform: scale(1.03);
 }
 .copy-btn:active { transform: scale(0.97); }
-
-/* ── DAG / Mermaid ── */
-.dag-wrap {
-  border: 1px solid var(--rim-mid);
-  background: var(--surface);
-  border-radius: var(--r-md);
-  padding: 1.25rem;
-  overflow: auto;
-}
-.mermaid { min-width: 100%; width: 100%; }
-.mermaid svg { width: 100% !important; height: auto !important; }
 
 /* ── Tables ── */
 .table-wrap {

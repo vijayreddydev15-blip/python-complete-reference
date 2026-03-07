@@ -3600,37 +3600,6 @@ def graph_tables() -> tuple[dict[str, list[str]], dict[int, list[dict[str, objec
     return dependents, by_layer
 
 
-def layer_class(layer: int) -> str:
-    if layer <= 1:
-        return "foundation"
-    if layer <= 3:
-        return "structures"
-    if layer <= 5:
-        return "functions"
-    if layer <= 7:
-        return "advanced"
-    return "expert"
-
-
-def mermaid_graph() -> str:
-    lines = ["graph LR"]
-    for concept in concepts:
-        lines.append(f"  {concept['id']}[{concept['id']}: {concept['title']}]")
-    for concept in concepts:
-        for prereq in concept["prereqs"]:
-            lines.append(f"  {prereq} --> {concept['id']}")
-    lines.extend([
-        "  classDef foundation fill:#1a3a2a,stroke:#4ade80,color:#f0ece2;",
-        "  classDef structures fill:#1a2a3a,stroke:#60a5fa,color:#f0ece2;",
-        "  classDef functions fill:#2a1a3a,stroke:#c084fc,color:#f0ece2;",
-        "  classDef advanced fill:#3a2a1a,stroke:#fb923c,color:#f0ece2;",
-        "  classDef expert fill:#3a1a1a,stroke:#f87171,color:#f0ece2;",
-    ])
-    for concept in concepts:
-        lines.append(f"  class {concept['id']} {layer_class(concept['layer'])};")
-    return "\n".join(lines)
-
-
 def escape_embedded_string_newlines(text: str) -> str:
     result: list[str] = []
     i = 0
@@ -3886,7 +3855,7 @@ def render_section(concept: dict[str, object], dependents: dict[str, list[str]],
   {render_pitfalls(pitfalls)}
   <h3>Self-Check Questions</h3>
   {render_self_checks(checks)}
-  <div class=\"section-footer\"><a class=\"prev-link\" href=\"#concept-map\">Back to Concept Map</a><a class=\"next-link\" href=\"#{next_id}\">Next concept &rarr; {next_id}</a></div>
+  <div class=\"section-footer\"><a class=\"prev-link\" href=\"#dependency-table\">Back to Dependency Table</a><a class=\"next-link\" href=\"#{next_id}\">Next concept &rarr; {next_id}</a></div>
 </section>
 """
 
@@ -3908,8 +3877,8 @@ def html_header(by_layer: dict[int, list[dict[str, object]]]) -> str:
 <title>Python Complete Reference</title>
 <link rel='preconnect' href='https://fonts.googleapis.com'>
 <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
-<link rel='preconnect' href='https://api.fontshare.com' crossorigin>
-<link id='themeStylesheet' rel='stylesheet' href='styles-dark.css'>
+<link id='darkThemeStylesheet' rel='stylesheet' href='styles-dark.css'>
+<link id='lightThemeStylesheet' rel='stylesheet' href='styles-light.css' media='not all'>
 <link rel='stylesheet' href='styles.css'>
 <script>
 try {
@@ -3918,7 +3887,8 @@ try {
   document.documentElement.dataset.theme = theme;
   window.__initialTheme = theme;
   if (theme === 'light') {
-    document.getElementById('themeStylesheet').href = 'styles-light.css';
+    document.getElementById('darkThemeStylesheet').media = 'not all';
+    document.getElementById('lightThemeStylesheet').media = 'all';
   }
 } catch (error) {
   document.documentElement.dataset.theme = 'dark';
@@ -3950,19 +3920,19 @@ try {
 <section class='hero' id='top'>
   <div class='section-kicker'>Python Complete Reference</div>
   <h1>Python from Runtime Basics to Expert Practice</h1>
-  <p>This document is ordered as a dependency graph rather than a loose glossary. Each topic appears only after its prerequisites, so you can learn the runtime model, core syntax, data structures, functions, OOP, protocols, packaging, concurrency, testing, and performance in a sequence that does not smuggle in unexplained concepts.</p>
+  <p>This document is ordered by dependencies rather than as a loose glossary. Each topic appears only after its prerequisites, so you can learn the runtime model, core syntax, data structures, functions, OOP, protocols, packaging, concurrency, testing, and performance in a sequence that does not smuggle in unexplained concepts.</p>
   <p>The left sidebar is grouped by layer and highlights the active section as you scroll. Every concept section includes motivation, explanation, mental model, examples, misconceptions, pitfalls, and self-check questions so the file reads like a compact textbook instead of a cheatsheet.</p>
 </section>"""
     return template.replace("__NAV_GROUPS__", "".join(nav_groups))
 
-def render_concept_map(dependents: dict[str, list[str]]) -> str:
+def render_dependency_table(dependents: dict[str, list[str]]) -> str:
     rows = []
     for concept in concepts:
         rows.append(
             f"<tr><td><a href='#{concept['id']}'>{concept['id']}</a></td><td>{escape(concept['title'])}</td><td>{concept['layer']}</td><td>{', '.join(concept['prereqs']) or 'None'}</td><td>{', '.join(dependents.get(concept['id'], [])) or 'None'}</td></tr>"
         )
     table_html = f"<table><thead><tr><th>ID</th><th>Concept Name</th><th>Layer</th><th>Direct Prerequisites</th><th>Direct Dependents</th></tr></thead><tbody>{''.join(rows)}</tbody></table>"
-    return f"""<!-- [TASK-2 START] --><section class='concept-section' id='concept-map' data-title='Concept Map'><div class='section-kicker'>Concept Map</div><h2>Directed Acyclic Graph of Python Concepts</h2><p>Read the graph from left to right. Every node is a concept, every arrow means \"learn the source concept before the target concept,\" and node colors mark the rough learning layer: green for foundations, blue for data/control structures, violet for functions and OOP, amber for advanced runtime protocols, and red for packaging, concurrency, tooling, and advanced engineering practice.</p><div class='dag-wrap'><div class='mermaid'>\n{mermaid_graph()}\n</div></div><h3>Dependency Table</h3>{wrap_table(table_html)}</section><!-- [TASK-2 END] -->"""
+    return f"""<!-- [TASK-2 START] --><section class='concept-section' id='dependency-table' data-title='Dependency Table'><div class='section-kicker'>Dependency Table</div><h2>Python Concept Dependencies</h2><p>Use this table as the overview for the reference. Each row shows a concept, the layer it belongs to, the concepts you should understand first, and the concepts that build on it later.</p>{wrap_table(table_html)}</section><!-- [TASK-2 END] -->"""
 
 
 def render_resources_and_quickref() -> str:
@@ -3997,16 +3967,14 @@ def html_footer() -> str:
     return r"""
 <!-- [TASK-11 START] -->
 </main></div><button class='back-to-top' id='backToTop' aria-label='Back to top'>&uarr; Top</button>
-<script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
 <script>
-document.body.classList.add('enhanced');
 const navLinks = [...document.querySelectorAll('.group-links a')];
 const trackedSections = [...document.querySelectorAll('.concept-section, #quick-reference, #whats-next')];
-const revealSections = [...document.querySelectorAll('.hero, .concept-section, .resources, .quick-reference')];
 const sidebar = document.getElementById('sidebar');
 const mobileToggle = document.getElementById('mobileToggle');
 const backToTop = document.getElementById('backToTop');
-const themeStylesheet = document.getElementById('themeStylesheet');
+const darkThemeStylesheet = document.getElementById('darkThemeStylesheet');
+const lightThemeStylesheet = document.getElementById('lightThemeStylesheet');
 const themeButtons = [...document.querySelectorAll('.theme-option')];
 const THEME_STORAGE_KEY = 'python-reference-theme';
 let currentTheme = window.__initialTheme === 'light' ? 'light' : 'dark';
@@ -4024,31 +3992,17 @@ function isTypingTarget(target) {
   return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 }
 
-async function renderMermaid(theme) {
-  const nodes = [...document.querySelectorAll('.mermaid')];
-  if (!nodes.length) {
+function applyTheme(theme, persist = true) {
+  const nextTheme = theme === 'light' ? 'light' : 'dark';
+  if (nextTheme === currentTheme) {
+    syncThemeButtons(currentTheme);
     return;
   }
-  nodes.forEach((node) => {
-    if (!node.dataset.graph) {
-      node.dataset.graph = node.textContent || '';
-    }
-    node.removeAttribute('data-processed');
-    node.innerHTML = node.dataset.graph;
-  });
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: theme === 'light' ? 'neutral' : 'dark',
-    flowchart: { useMaxWidth: true, nodeSpacing: 36, rankSpacing: 130 },
-  });
-  await mermaid.run({ querySelector: '.mermaid' });
-}
-
-async function applyTheme(theme, persist = true) {
-  currentTheme = theme === 'light' ? 'light' : 'dark';
+  currentTheme = nextTheme;
   document.documentElement.dataset.theme = currentTheme;
   document.body.dataset.theme = currentTheme;
-  themeStylesheet.href = currentTheme === 'light' ? 'styles-light.css' : 'styles-dark.css';
+  darkThemeStylesheet.media = currentTheme === 'dark' ? 'all' : 'not all';
+  lightThemeStylesheet.media = currentTheme === 'light' ? 'all' : 'not all';
   syncThemeButtons(currentTheme);
   if (persist) {
     try {
@@ -4057,7 +4011,6 @@ async function applyTheme(theme, persist = true) {
       // Ignore storage errors and keep the in-memory theme.
     }
   }
-  await renderMermaid(currentTheme);
 }
 
 function copyBlockText(pre) {
@@ -4084,7 +4037,7 @@ document.querySelectorAll('pre[data-lang]').forEach((pre) => {
 
 themeButtons.forEach((button) => {
   button.addEventListener('click', () => {
-    applyTheme(button.dataset.theme || 'dark').catch(() => {});
+    applyTheme(button.dataset.theme || 'dark');
   });
 });
 
@@ -4126,15 +4079,6 @@ const activeObserver = new IntersectionObserver((entries) => {
 }, { rootMargin: '-18% 0px -58% 0px', threshold: [0.2, 0.45, 0.65] });
 trackedSections.forEach((section) => activeObserver.observe(section));
 
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('revealed');
-    }
-  });
-}, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
-revealSections.forEach((section) => revealObserver.observe(section));
-
 backToTop.addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
@@ -4150,13 +4094,12 @@ document.addEventListener('keydown', (event) => {
     return;
   }
   event.preventDefault();
-  applyTheme(currentTheme === 'dark' ? 'light' : 'dark').catch(() => {});
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
 });
 
 window.addEventListener('scroll', updateScrollState, { passive: true });
 updateScrollState();
 syncThemeButtons(currentTheme);
-renderMermaid(currentTheme).catch(() => {});
 </script>
 <!-- [TASK-11 END] -->
 </body></html>
@@ -4165,7 +4108,7 @@ renderMermaid(currentTheme).catch(() => {});
 
 def build_document() -> str:
     dependents, by_layer = graph_tables()
-    parts = [html_header(by_layer), render_concept_map(dependents)]
+    parts = [html_header(by_layer), render_dependency_table(dependents)]
     ranges = {3:("PY01","PY08"),4:("PY09","PY14"),5:("PY15","PY18"),6:("PY19","PY24"),7:("PY25","PY31"),8:("PY32","PY38"),9:("PY39","PY50"),10:("PY51","PY59")}
     for task_num, (start_id, end_id) in ranges.items():
         parts.append(f"<!-- [TASK-{task_num} START] -->")
@@ -4187,7 +4130,9 @@ def validate(document: str) -> None:
         cid = concept['id']
         assert document.count(f"id=\"{cid}\"") == 1, cid
         assert f"href='#{cid}'" in document or f'href=\"#{cid}\"' in document, cid
-    assert '<div class=\'mermaid\'>' in document or '<div class="mermaid">' in document
+    assert "id='dependency-table'" in document or 'id="dependency-table"' in document
+    assert "mermaid" not in document
+    assert "concept-map" not in document
     assert 'lorem ipsum' not in document.lower()
 
 
