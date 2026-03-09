@@ -2,11 +2,18 @@
 
 from collections import defaultdict
 import builtins as py_builtins
+import hashlib
 import io
 import keyword
+import os
+import re
+import shutil
+import subprocess
+import sys
 import token as tokenmod
 import tokenize
-from html import escape
+from functools import lru_cache
+from html import escape, unescape
 from pathlib import Path
 from textwrap import dedent
 
@@ -15,6 +22,7 @@ OUTFILE = ROOT / "python_complete_reference.html"
 STYLESHEET = ROOT / "styles.css"
 LIGHT_STYLESHEET = ROOT / "styles-light.css"
 DARK_STYLESHEET = ROOT / "styles-dark.css"
+SNIPPET_TMPDIR = ROOT / ".snippet-exec"
 
 BUILTIN_NAMES = {name for name in dir(py_builtins) if not name.startswith('_')}
 
@@ -55,7 +63,14 @@ NAV_LABELS = {
 }
 
 
-def b(text: str) -> str:
+def strip_margin(text: str) -> str:
+    """Remove the common leading indent from a triple-quoted code block.
+
+    Lets code examples be indented naturally inside the surrounding Python
+    source without that indentation appearing in the rendered HTML output.
+    Embedded triple-quoted string *contents* are left untouched because only
+    lines that share the detected leading-whitespace prefix are stripped.
+    """
     lines = text.strip("\n").splitlines()
     first_content = next((line for line in lines if line.strip()), "")
     # Strip the example's outer margin without touching embedded multiline string contents.
@@ -65,11 +80,34 @@ def b(text: str) -> str:
     return "\n".join(line[len(margin):] if line.startswith(margin) else line for line in lines)
 
 
-def ex(title: str, why: str, code: str, observe: str) -> dict[str, str]:
+def make_example(title: str, why: str, code: str, observe: str) -> dict[str, str]:
+    """Build a single worked example dict consumed by render_examples().
+
+    Args:
+        title:   Short headline shown above the code block.
+        why:     One or two sentences explaining *why* this example exists.
+        code:    Raw Python source (pass through strip_margin() first).
+        observe: What the reader should notice after running or reading it.
+    """
     return {"title": title, "why": why, "code": code, "observe": observe}
 
 
-def c(cid: str, layer: int, title: str, prereqs: list[str], quick: str, learn: list[str], problem: str, mental: str, examples: list[dict[str, str]], why_not: str = "") -> dict[str, object]:
+def make_concept(cid: str, layer: int, title: str, prereqs: list[str], quick: str, learn: list[str], problem: str, mental: str, examples: list[dict[str, str]], why_not: str = "") -> dict[str, object]:
+    """Assemble a full concept record used by render_section() and the graph tables.
+
+    Args:
+        cid:      Stable identifier like 'PY05' used for anchors and cross-links.
+        layer:    Dependency layer (0 = foundation, 14 = advanced ecosystem).
+        title:    Human-readable section title.
+        prereqs:  Concept IDs the reader should understand first.
+        quick:    One-sentence TL;DR shown at the top of the section.
+        learn:    Bullet points listing concrete learning outcomes.
+        problem:  The real-world motivation: *why does this feature exist?*
+        mental:   Short ASCII diagram or phrase capturing the runtime model.
+        examples: List of dicts produced by make_example().
+        why_not:  When to avoid or prefer alternatives. Falls back to a
+                  generic trade-off note when omitted.
+    """
     return {
         "id": cid,
         "layer": layer,
@@ -87,7 +125,7 @@ def c(cid: str, layer: int, title: str, prereqs: list[str], quick: str, learn: l
 concepts: list[dict[str, object]] = []
 
 concepts.extend([
-    c(
+    make_concept(
         "PY01",
         0,
         "What is Python?",
@@ -101,10 +139,10 @@ concepts.extend([
         "Python exists so humans can automate real work with readable code, a large standard library, and a runtime model that stays inspectable instead of hidden behind opaque tooling.",
         "source.py -> lexer tokens -> parser -> AST -> bytecode -> PVM -> objects and side effects",
         [
-            ex(
+            make_example(
                 "Hello world, character by character",
                 "This makes the smallest useful Python program explicit. Even the invisible newline matters because Python reads text, not mystical commands.",
-                b('''
+                strip_margin('''
                 source = 'print("Hello, world!")\\n'
                 print(repr(source))
                 print("p r i n t -> the function name")
@@ -114,10 +152,10 @@ concepts.extend([
                 '''),
                 "The repr output shows the final newline as `\\n`. If you remove it, the source is still valid, but the string representation changes because the file text changed.",
             ),
-            ex(
+            make_example(
                 "Inspect the AST and bytecode for a tiny program",
                 "Python does not execute raw text directly. It parses structure first, then compiles the structure into bytecode.",
-                b('''
+                strip_margin('''
                 import ast
                 import dis
 
@@ -130,10 +168,10 @@ concepts.extend([
                 '''),
                 "You should see `Assign` and `Call` nodes in the AST, then bytecode instructions like `LOAD_CONST`, `STORE_NAME`, and `CALL` in the disassembly.",
             ),
-            ex(
+            make_example(
                 "See which Python implementation is running",
                 "The language is larger than CPython. Alternative implementations exist because different deployment targets care about different tradeoffs.",
-                b('''
+                strip_margin('''
                 import platform
                 import sys
 
@@ -146,7 +184,7 @@ concepts.extend([
         ],
         "Python could have forced ahead-of-time compilation or manual memory management, but its design favors fast feedback. CPython wins by compatibility, PyPy by JIT speed on some workloads, and Jython by Java ecosystem access.",
     ),
-    c(
+    make_concept(
         "PY02",
         0,
         "Python Installation & the REPL",
@@ -160,10 +198,10 @@ concepts.extend([
         "A fast feedback loop matters because beginners and experts both need a safe place to test assumptions before committing code to a file or a larger application.",
         "shell lookup -> executable path -> interpreter process -> REPL prompt -> objects you can inspect live",
         [
-            ex(
+            make_example(
                 "Find the interpreter you are actually using",
                 "This matters because multiple Python installs can exist on one machine. PATH and the Windows launcher decide which one starts.",
-                b('''
+                strip_margin('''
                 import sys
                 import os
 
@@ -173,10 +211,10 @@ concepts.extend([
                 '''),
                 "`sys.executable` tells you the exact interpreter path. If a different Python starts than you expected, PATH order or the launcher configuration is usually why.",
             ),
-            ex(
+            make_example(
                 "Core REPL discovery tools",
                 "The REPL becomes useful when you treat it like a microscope. You can inspect objects without creating a full project first.",
-                b('''
+                strip_margin('''
                 name = "python"
                 print(type(name))
                 print(dir(name)[:8])
@@ -184,10 +222,10 @@ concepts.extend([
                 '''),
                 "`type()` shows the object's class, `dir()` shows accessible attributes, and `help()` opens built-in documentation. In a real REPL, `_` would also hold the last result.",
             ),
-            ex(
+            make_example(
                 "Shebang text and the launcher concept",
                 "Unix-like systems can read the first line of a script as an instruction for which interpreter should run it.",
-                b('''
+                strip_margin('''
                 script = "#!/usr/bin/env python3\\nprint('hello from a script')\\n"
                 print(script.splitlines()[0])
                 print("On Windows, `py script.py` plays a similar launcher role")
@@ -197,7 +235,7 @@ concepts.extend([
         ],
         "You can write everything in files, but skipping the REPL slows learning because every tiny experiment becomes a save-run-debug loop.",
     ),
-    c(
+    make_concept(
         "PY03",
         0,
         "How Python Executes Code",
@@ -211,10 +249,10 @@ concepts.extend([
         "Execution models matter because debugging is easier when you know whether a failure comes from parsing, compilation, name lookup, or runtime behavior.",
         "text -> tokens -> syntax tree -> compiled code object -> bytecode loop -> object operations",
         [
-            ex(
+            make_example(
                 "Parse a five-line program into an AST",
                 "This shows that Python tracks structure, not just lines of text.",
-                b('''
+                strip_margin('''
                 import ast
 
                 source = """
@@ -229,10 +267,10 @@ concepts.extend([
                 '''),
                 "Look for nodes like `Assign`, `BinOp`, `JoinedStr`, and `Call`. If the source were malformed, parsing would fail before any runtime work happened.",
             ),
-            ex(
+            make_example(
                 "Disassemble the same program",
                 "Bytecode is the instruction stream the CPython virtual machine actually executes.",
-                b('''
+                strip_margin('''
                 import dis
 
                 source = "x = 10\\ny = x + 5\\nprint(y)\\n"
@@ -241,10 +279,10 @@ concepts.extend([
                 '''),
                 "Instructions such as `LOAD_CONST`, `STORE_NAME`, `LOAD_NAME`, `BINARY_OP`, and `CALL` show how high-level code becomes a low-level sequence.",
             ),
-            ex(
+            make_example(
                 "Compile a file and inspect `__pycache__`",
                 "`.pyc` files speed startup by caching bytecode so the parser and compiler do not need to rerun every time.",
-                b('''
+                strip_margin('''
                 import pathlib
                 import py_compile
 
@@ -258,7 +296,7 @@ concepts.extend([
         ],
         "Python could have hidden all of this behind a black box, but exposing ASTs, code objects, and disassembly makes tooling, debugging, and teaching much easier.",
     ),
-    c(
+    make_concept(
         "PY04",
         0,
         "Python Versioning",
@@ -272,10 +310,10 @@ concepts.extend([
         "Versions matter because examples that work in Python 3.12 may fail in Python 3.8, and many confusing tutorials on the internet still mix Python 2 syntax into Python 3 discussions.",
         "language evolution -> PEP proposal -> accepted feature -> release series -> your runtime version decides availability",
         [
-            ex(
+            make_example(
                 "Check the running version and gate a feature",
                 "Language features are tied to concrete releases. `match/case`, for example, requires Python 3.10 or later.",
-                b('''
+                strip_margin('''
                 import sys
 
                 print(sys.version_info)
@@ -286,19 +324,19 @@ concepts.extend([
                 '''),
                 "Version tuples let you write exact checks instead of guessing from documentation screenshots.",
             ),
-            ex(
+            make_example(
                 "Read The Zen of Python",
                 "PEP 20 is a compact summary of the language's values and is worth reading because many design choices trace back to it.",
-                b('''
+                strip_margin('''
                 import this
                 print("PEP 20: The Zen of Python")
                 '''),
                 "`import this` prints aphorisms such as 'Explicit is better than implicit.' They are not laws, but they explain the language's bias toward clarity.",
             ),
-            ex(
+            make_example(
                 "Print important version identifiers",
                 "Semantic versioning is not the whole Python story, but release numbers still communicate feature availability and support windows.",
-                b('''
+                strip_margin('''
                 import platform
                 print(platform.python_version())
                 print(platform.python_implementation())
@@ -309,7 +347,7 @@ concepts.extend([
         ],
         "Python could have kept every Python 2 behavior forever, but breaking compatibility in Python 3 fixed Unicode handling, cleaned up syntax, and removed long-term design debt.",
     ),
-    c(
+    make_concept(
         "PY05",
         1,
         "Variables, Assignment, and Name Binding",
@@ -323,10 +361,10 @@ concepts.extend([
         "Python uses name binding so objects can be passed around cheaply, shared intentionally, and rebound without pretending that names physically contain values.",
         "names table -> object references -> heap objects\n`a` and `b` can point at the same object",
         [
-            ex(
+            make_example(
                 "A name is a tag, not a storage box",
                 "`id()` makes the object identity visible so you can see two names pointing at one object.",
-                b('''
+                strip_margin('''
                 data = [1, 2, 3]
                 alias = data
                 print(id(data), id(alias))
@@ -335,10 +373,10 @@ concepts.extend([
                 '''),
                 "Both names have the same `id`, and mutating through `alias` changes what `data` sees because the list object is shared.",
             ),
-            ex(
+            make_example(
                 "Augmented assignment differs for ints and lists",
                 "Immutable objects usually create a new object on `+=`, while mutable containers often modify in place.",
-                b('''
+                strip_margin('''
                 number = 10
                 before_number = id(number)
                 number += 5
@@ -352,10 +390,10 @@ concepts.extend([
                 '''),
                 "The integer gets a new identity after `+=`. The list usually keeps the same identity because the operation mutates it in place.",
             ),
-            ex(
+            make_example(
                 "Tuple unpacking and the shared-list trap",
                 "Unpacking is expressive, but chained assignment to a mutable object creates aliases.",
-                b('''
+                strip_margin('''
                 a, *rest, z = (1, 2, 3, 4, 5)
                 print(a, rest, z)
 
@@ -368,7 +406,7 @@ concepts.extend([
         ],
         "Some languages model variables as typed storage slots. Python chooses flexible name binding because objects carry their own type and lifetime information.",
     ),
-    c(
+    make_concept(
         "PY06",
         1,
         "Python's Type System",
@@ -382,10 +420,10 @@ concepts.extend([
         "The type system exists to let code stay flexible without silently gluing incompatible values together in ways that hide mistakes.",
         "name -> object -> type\noperations ask the object what behavior it supports at runtime",
         [
-            ex(
+            make_example(
                 "Rebinding the same name to different types",
                 "Dynamic typing means the name is not permanently declared as one type.",
-                b('''
+                strip_margin('''
                 value = 10
                 print(value, type(value))
                 value = "ten"
@@ -395,10 +433,10 @@ concepts.extend([
                 '''),
                 "The same name points to different objects over time. The objects know their own type; the name does not.",
             ),
-            ex(
+            make_example(
                 "Duck typing with unrelated classes",
                 "If two objects respond to the same method, one function can often use both without caring about inheritance.",
-                b('''
+                strip_margin('''
                 class Dog:
                     def speak(self):
                         return "woof"
@@ -415,10 +453,10 @@ concepts.extend([
                 '''),
                 "`announce` works because it needs a `speak()` method, not a specific class name. That is duck typing in practice.",
             ),
-            ex(
+            make_example(
                 "Strong typing rejects unsafe mixing",
                 "Python refuses to guess how to combine incompatible types because guesses often hide bugs.",
-                b('''
+                strip_margin('''
                 try:
                     print("1" + 1)
                 except TypeError as exc:
@@ -431,7 +469,7 @@ concepts.extend([
         ],
         "Python could have required declarations everywhere or copied JavaScript-style coercion. It chooses dynamic behavior with strong runtime checks to keep code flexible without making bugs invisible.",
     ),
-    c(
+    make_concept(
         "PY07",
         1,
         "Built-in Data Types Overview",
@@ -445,10 +483,10 @@ concepts.extend([
         "These built-ins exist so common tasks have precise runtime meanings: whole numbers, approximate decimals, text, raw bytes, truth values, and the explicit absence of a value.",
         "small primitive object types -> combined later into larger structures",
         [
-            ex(
+            make_example(
                 "Inspect several built-in types at once",
                 "`type()`, `isinstance()`, and `sys.getsizeof()` reveal what kind of object you have and how much space the wrapper object itself consumes.",
-                b('''
+                strip_margin('''
                 import sys
 
                 values = [42, 3.14, 2 + 3j, True, "text", b"text", None]
@@ -457,10 +495,10 @@ concepts.extend([
                 '''),
                 "Every item is an object. Sizes vary, and `None` is still a real singleton object even though it means 'no useful value'.",
             ),
-            ex(
+            make_example(
                 "Huge integers and floating-point surprise",
                 "Python integers grow to arbitrary precision, while binary floating-point cannot represent many decimal fractions exactly.",
-                b('''
+                strip_margin('''
                 from decimal import Decimal
                 import math
 
@@ -473,10 +511,10 @@ concepts.extend([
                 '''),
                 "The huge integer works exactly. The float comparison fails because IEEE 754 stores an approximation. Use `Decimal` for decimal money rules or `math.isclose()` for tolerant comparisons.",
             ),
-            ex(
+            make_example(
                 "`None` is a singleton",
                 "There is exactly one `None` object, which is why identity tests are correct here.",
-                b('''
+                strip_margin('''
                 first = None
                 second = None
                 print(first is second)
@@ -488,7 +526,7 @@ concepts.extend([
         ],
         "Python keeps these primitives distinct because pretending text, bytes, integers, and floats are interchangeable leads to subtle bugs, especially around encoding and numeric precision.",
     ),
-    c(
+    make_concept(
         "PY08",
         1,
         "Operators",
@@ -502,10 +540,10 @@ concepts.extend([
         "Operators exist because some actions are so common that function-call syntax would be noisy, but compact syntax only works if you understand the exact question each operator asks.",
         "expression tree -> precedence decides grouping -> operands invoke object behavior -> result object returned",
         [
-            ex(
+            make_example(
                 "Equality is not identity",
                 "`==` asks whether values compare equal. `is` asks whether two names point to the same object.",
-                b('''
+                strip_margin('''
                 a = 256
                 b = 256
                 print(a == b, a is b)
@@ -516,10 +554,10 @@ concepts.extend([
                 '''),
                 "Small integers may be cached, so `a is b` can appear true. Lists with the same contents compare equal but are still different objects.",
             ),
-            ex(
+            make_example(
                 "Short-circuit evaluation skips unnecessary work",
                 "Logical operators stop as soon as the result is determined, which is useful for guards and dangerous if you forget about side effects.",
-                b('''
+                strip_margin('''
                 def trace(label, value):
                     print(label)
                     return value
@@ -531,10 +569,10 @@ concepts.extend([
                 '''),
                 "The second operand is skipped in both expressions once the result is already known.",
             ),
-            ex(
+            make_example(
                 "Use the walrus operator for one-pass capture",
                 "Added in Python 3.8, `:=` lets you bind and test a value in one expression when that genuinely improves clarity.",
-                b('''
+                strip_margin('''
                 data = ["", "alpha", "beta"]
                 if (first_real := next((item for item in data if item), None)) is not None:
                     print(first_real)
@@ -547,7 +585,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY09",
         2,
         "Strings",
@@ -561,10 +599,10 @@ concepts.extend([
         "Text processing is everywhere, so Python separates text from bytes and makes string operations predictable instead of mixing encoding concerns into every line.",
         "Unicode text -> string object\nencode() -> bytes\ndecode() -> string again",
         [
-            ex(
+            make_example(
                 "Encode and decode an emoji",
                 "Unicode text is abstract; bytes are one possible encoded representation of that text.",
-                b('''
+                strip_margin('''
                 snake = "🐍"
                 payload = snake.encode("utf-8")
                 print(payload)
@@ -572,10 +610,10 @@ concepts.extend([
                 '''),
                 "UTF-8 turns the single character into multiple bytes. Decoding the same byte sequence returns the original string.",
             ),
-            ex(
+            make_example(
                 "Formatting, slicing, and f-string debugging",
                 "String operations stay readable because the type exposes common text tasks directly.",
-                b('''
+                strip_margin('''
                 name = "Ada"
                 score = 91.234
                 print(name[:2])
@@ -585,10 +623,10 @@ concepts.extend([
                 '''),
                 "Slicing returns a new string, f-strings can align and round values, and raw strings are handy when backslashes would otherwise be noisy.",
             ),
-            ex(
+            make_example(
                 "Immutability and efficient joining",
                 "Repeated concatenation inside a loop creates many temporary strings; joining a list is usually linear and clearer.",
-                b('''
+                strip_margin('''
                 parts = ["py", "thon", "-", "rocks"]
                 joined = "".join(parts)
                 print(joined)
@@ -602,7 +640,7 @@ concepts.extend([
         ],
         "Python could have blurred text and bytes into one type, but Python 3 deliberately separates them because encoding bugs are easier to fix when the distinction is explicit.",
     ),
-    c(
+    make_concept(
         "PY10",
         2,
         "Lists",
@@ -616,10 +654,10 @@ concepts.extend([
         "Programs need a resizable sequence for 'zero or more items'. Lists fill that role, trading memory overhead for flexible mutation and fast append behavior.",
         "list object -> array of references -> referenced objects elsewhere in memory",
         [
-            ex(
+            make_example(
                 "Lists store references, not inline values",
                 "This is why a list can hold mixed object types and why shallow copies still share nested objects.",
-                b('''
+                strip_margin('''
                 import sys
                 from array import array
 
@@ -630,10 +668,10 @@ concepts.extend([
                 '''),
                 "The list usually has more overhead because it stores general-purpose object references. `array.array` is denser because it stores fixed-type machine values.",
             ),
-            ex(
+            make_example(
                 "Comprehension, loop, and map can compute the same result",
                 "All three forms work; choose the clearest one that matches the amount of logic involved.",
-                b('''
+                strip_margin('''
                 numbers = [1, 2, 3, 4]
                 squares_loop = []
                 for n in numbers:
@@ -644,10 +682,10 @@ concepts.extend([
                 '''),
                 "The outputs match. Comprehensions are usually the sweet spot for simple transformations because they are both compact and readable.",
             ),
-            ex(
+            make_example(
                 "Slice assignment can change length, and deep copy matters for nesting",
                 "Lists are flexible enough that replacing a slice can grow or shrink the container.",
-                b('''
+                strip_margin('''
                 import copy
 
                 values = [0, 1, 2, 3]
@@ -665,7 +703,7 @@ concepts.extend([
         ],
         "If you need fixed-size homogeneous storage, a list is often the wrong tool. Python keeps lists general on purpose so everyday code stays simple.",
     ),
-    c(
+    make_concept(
         "PY11",
         2,
         "Tuples",
@@ -679,10 +717,10 @@ concepts.extend([
         "A fixed-shape container solves a different problem than a list: it communicates 'this set of positions belongs together and usually should not be resized'.",
         "tuple -> ordered references with fixed length\nmay still point at mutable inner objects",
         [
-            ex(
+            make_example(
                 "Packing, unpacking, and starred capture",
                 "Python uses tuples implicitly in many multiple-assignment situations.",
-                b('''
+                strip_margin('''
                 point = 10, 20
                 x, y = point
                 a, *middle, z = (1, 2, 3, 4, 5)
@@ -691,10 +729,10 @@ concepts.extend([
                 '''),
                 "Commas create the tuple. Starred unpacking is useful when you care about the ends more than the exact middle length.",
             ),
-            ex(
+            make_example(
                 "`namedtuple` gives field names to positions",
                 "Plain tuples are compact but anonymous; `namedtuple` keeps the storage pattern while making the record self-describing.",
-                b('''
+                strip_margin('''
                 from collections import namedtuple
 
                 User = namedtuple("User", ["name", "email"])
@@ -703,10 +741,10 @@ concepts.extend([
                 '''),
                 "Field names remove the 'what was index 1 again?' problem without needing a full custom class.",
             ),
-            ex(
+            make_example(
                 "Tuple immutability does not freeze nested objects",
                 "The tuple cannot be resized, but a mutable item stored inside it can still change.",
-                b('''
+                strip_margin('''
                 record = ("numbers", [1, 2, 3])
                 record[1].append(4)
                 print(record)
@@ -719,7 +757,7 @@ concepts.extend([
         ],
         "Lists are better when shape changes frequently. Tuples are better when the positions have meaning and the record should stay structurally stable.",
     ),
-    c(
+    make_concept(
         "PY12",
         2,
         "Dictionaries",
@@ -733,20 +771,20 @@ concepts.extend([
         "Keyed lookup is fundamental because many real problems are not 'the third item in a list' but 'the setting named timeout' or 'the user with this email'.",
         "key -> hash -> slot lookup -> value reference\ncollisions handled internally by the dict implementation",
         [
-            ex(
+            make_example(
                 "Basic lookups and insertion order",
                 "Python 3.7+ guarantees that dictionaries remember insertion order, which makes many data-processing tasks more intuitive.",
-                b('''
+                strip_margin('''
                 settings = {"host": "db.local", "port": 5432, "ssl": True}
                 print(settings["host"])
                 print(list(settings.keys()))
                 '''),
                 "The key order prints in insertion order. That behavior started as an implementation detail and became a language guarantee in Python 3.7.",
             ),
-            ex(
+            make_example(
                 "`get`, merge styles, and `defaultdict` grouping",
                 "These tools remove noisy boilerplate around missing keys.",
-                b('''
+                strip_margin('''
                 from collections import defaultdict
 
                 a = {"x": 1, "y": 2}
@@ -761,10 +799,10 @@ concepts.extend([
                 '''),
                 "`get` avoids `KeyError`, `a | b` returns a new merged dict in Python 3.9+, and `defaultdict` creates missing containers automatically.",
             ),
-            ex(
+            make_example(
                 "JSON round-trip to and from a dictionary",
                 "JSON maps neatly to Python dicts and lists, which is why dictionaries sit at the center of many APIs.",
-                b('''
+                strip_margin('''
                 import json
 
                 payload = {"user": "Ada", "active": True, "roles": ["admin", "editor"]}
@@ -781,7 +819,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY13",
         2,
         "Sets & Frozensets",
@@ -795,10 +833,10 @@ concepts.extend([
         "Many problems are really about 'have I seen this before?' or 'what overlaps between these groups?' Sets express that directly instead of forcing linear scans through lists.",
         "set -> hash table of unique keys only\nno duplicates, no positional indexing",
         [
-            ex(
+            make_example(
                 "Membership in a set versus a list",
                 "Sets shine when existence checks matter more than order.",
-                b('''
+                strip_margin('''
                 names_list = ["ada", "grace", "guido", "linus"]
                 names_set = {"ada", "grace", "guido", "linus"}
                 print("guido" in names_list)
@@ -806,10 +844,10 @@ concepts.extend([
                 '''),
                 "Both tests return `True`, but the set is designed for fast membership lookup while the list checks item by item.",
             ),
-            ex(
+            make_example(
                 "Set algebra reads like the problem statement",
                 "Union, intersection, difference, and symmetric difference correspond directly to common reasoning patterns.",
-                b('''
+                strip_margin('''
                 backend = {"Ada", "Grace", "Linus"}
                 devops = {"Grace", "Sam", "Linus"}
                 print(backend | devops)
@@ -819,10 +857,10 @@ concepts.extend([
                 '''),
                 "`|` is union, `&` is intersection, `-` is difference, and `^` is symmetric difference: members in exactly one set.",
             ),
-            ex(
+            make_example(
                 "`frozenset` can be a dictionary key",
                 "A normal set is mutable and therefore unhashable. Freezing it makes it safe to use inside other hash-based structures.",
-                b('''
+                strip_margin('''
                 permissions = {
                     frozenset({"read", "write"}): "editor",
                     frozenset({"read"}): "viewer",
@@ -834,7 +872,7 @@ concepts.extend([
         ],
         "Use a list when order and duplicates matter. Use a set when the core question is uniqueness or membership.",
     ),
-    c(
+    make_concept(
         "PY14",
         2,
         "The Collections Module",
@@ -848,10 +886,10 @@ concepts.extend([
         "Specialized containers exist because general-purpose containers force you to re-implement the same patterns repeatedly: queues, counting, layered config, and stable reordering.",
         "general containers -> specialized wrappers tuned for common access patterns",
         [
-            ex(
+            make_example(
                 "`deque` supports cheap appends at both ends",
                 "A list is great for appending on the right but expensive for repeated inserts on the left.",
-                b('''
+                strip_margin('''
                 from collections import deque
 
                 queue = deque(["b", "c"])
@@ -861,10 +899,10 @@ concepts.extend([
                 '''),
                 "`deque` is the right tool for queues, breadth-first search, and sliding windows.",
             ),
-            ex(
+            make_example(
                 "`Counter` and `defaultdict` remove counting boilerplate",
                 "These types map directly onto frequency analysis and grouped aggregation.",
-                b('''
+                strip_margin('''
                 from collections import Counter, defaultdict
 
                 words = "to be or not to be".split()
@@ -877,10 +915,10 @@ concepts.extend([
                 '''),
                 "`Counter` exposes counts as first-class data, and `defaultdict(list)` is the standard way to build adjacency lists.",
             ),
-            ex(
+            make_example(
                 "`ChainMap` and `OrderedDict` for layered config and manual ordering",
                 "Sometimes you need to search through several mappings as one logical view or move keys to represent recency.",
-                b('''
+                strip_margin('''
                 from collections import ChainMap, OrderedDict
 
                 defaults = {"port": 8000, "debug": False}
@@ -898,7 +936,7 @@ concepts.extend([
         ],
         "You can always force these patterns into plain dicts and lists, but that usually produces more code and weaker intent.",
     ),
-    c(
+    make_concept(
         "PY15",
         3,
         "Conditionals",
@@ -912,10 +950,10 @@ concepts.extend([
         "Branching exists because programs react to state. The important question is not 'can I branch?' but 'what form makes the decision obvious to the next reader?'.",
         "condition -> truth test -> choose one branch\npattern matching -> compare shape and values -> bind pieces if matched",
         [
-            ex(
+            make_example(
                 "Classic `if/elif/else` decision making",
                 "Use this when you are evaluating unrelated conditions or simple thresholds.",
-                b('''
+                strip_margin('''
                 score = 87
                 if score >= 90:
                     grade = "A"
@@ -927,10 +965,10 @@ concepts.extend([
                 '''),
                 "Conditions are checked top to bottom until one succeeds. Order matters.",
             ),
-            ex(
+            make_example(
                 "Pattern matching on structured input",
                 "`match/case` shines when both the shape and the content of data matter.",
-                b('''
+                strip_margin('''
                 # Added in Python 3.10
                 command = ("move", 3, 4)
                 match command:
@@ -943,10 +981,10 @@ concepts.extend([
                 '''),
                 "Pattern matching can unpack and validate in one place. Use `_` as the wildcard when nothing else matches.",
             ),
-            ex(
+            make_example(
                 "A ternary is fine until it stops being readable",
                 "The expression form is useful for short binary choices, not for dense nested business logic.",
-                b('''
+                strip_margin('''
                 age = 20
                 status = "adult" if age >= 18 else "minor"
                 print(status)
@@ -956,7 +994,7 @@ concepts.extend([
         ],
         "Pattern matching is powerful, but `if/elif` remains the best tool when the logic is just a few unrelated boolean checks.",
     ),
-    c(
+    make_concept(
         "PY16",
         3,
         "Loops",
@@ -970,19 +1008,19 @@ concepts.extend([
         "Loops exist because real work often means 'do this for every item' or 'keep trying until the state changes'. Python builds looping on the iterator protocol so one syntax can drive many container types.",
         "iterable -> iter() -> next() until StopIteration\nloop else runs only if no break happened",
         [
-            ex(
+            make_example(
                 "`for` is a foreach loop",
                 "You usually loop over values directly instead of managing indexes yourself.",
-                b('''
+                strip_margin('''
                 for name in ["Ada", "Grace", "Guido"]:
                     print(name)
                 '''),
                 "This reads like the problem statement: for each name, print it. No manual counter is needed.",
             ),
-            ex(
+            make_example(
                 "The `else` clause means 'not broken out of'",
                 "This is surprisingly useful in search patterns.",
-                b('''
+                strip_margin('''
                 target = 7
                 for number in [1, 3, 5, 7, 9]:
                     if number == target:
@@ -993,10 +1031,10 @@ concepts.extend([
                 '''),
                 "Because the loop hits `break`, the `else` block is skipped. Remove the target and the `else` block runs.",
             ),
-            ex(
+            make_example(
                 "Use `enumerate`, `zip`, and remember loop variables persist",
                 "These helpers make coordinated iteration clearer than manual index math.",
-                b('''
+                strip_margin('''
                 names = ["Ada", "Grace"]
                 scores = [98, 99]
                 for index, (name, score) in enumerate(zip(names, scores), start=1):
@@ -1011,7 +1049,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY17",
         3,
         "Comprehensions",
@@ -1025,10 +1063,10 @@ concepts.extend([
         "Comprehensions exist because the pattern 'iterate, transform, maybe filter, append' is so common that spelling it with full loops adds noise when the logic is simple.",
         "input iterable -> expression applied per item -> optional filter -> new collection or lazy generator",
         [
-            ex(
+            make_example(
                 "Equivalent loop and comprehension",
                 "A comprehension is easiest to read when one expression and maybe one filter are enough.",
-                b('''
+                strip_margin('''
                 numbers = [1, 2, 3, 4, 5]
                 odds_loop = []
                 for n in numbers:
@@ -1039,10 +1077,10 @@ concepts.extend([
                 '''),
                 "The outputs match. The comprehension removes boilerplate, but the logic is still simple enough to scan in one pass.",
             ),
-            ex(
+            make_example(
                 "Set and dict comprehensions",
                 "The pattern generalizes naturally beyond lists.",
-                b('''
+                strip_margin('''
                 words = ["Ada", "ada", "Grace"]
                 lowered = {word.lower() for word in words}
                 lengths = {word: len(word) for word in words}
@@ -1051,10 +1089,10 @@ concepts.extend([
                 '''),
                 "Set comprehensions automatically remove duplicates, and dict comprehensions let keys and values come from expressions.",
             ),
-            ex(
+            make_example(
                 "Generator expressions are lazy",
                 "Use a generator when you want to stream values instead of materializing them all immediately.",
-                b('''
+                strip_margin('''
                 numbers = (n * n for n in range(5))
                 print(numbers)
                 print(list(numbers))
@@ -1064,7 +1102,7 @@ concepts.extend([
         ],
         "Once a comprehension contains deep nesting, side effects, or complicated branching, a normal loop is usually clearer and easier to debug.",
     ),
-    c(
+    make_concept(
         "PY18",
         3,
         "Exception Handling",
@@ -1078,10 +1116,10 @@ concepts.extend([
         "Programs fail in ways you cannot completely predict: missing files, bad input, network errors, logic mistakes. Exceptions let Python surface those failures without forcing every function to return error codes manually.",
         "normal path\ntry block -> exception? -> matching except -> optional else if none -> finally always runs",
         [
-            ex(
+            make_example(
                 "`try/except/else/finally` in one place",
                 "Each clause answers a different question: what might fail, what to do if it fails, what to do if it succeeds, and what must always happen.",
-                b('''
+                strip_margin('''
                 try:
                     value = int("42")
                 except ValueError:
@@ -1093,10 +1131,10 @@ concepts.extend([
                 '''),
                 "`else` runs only when no exception was raised. `finally` always runs, which is why it is useful for cleanup.",
             ),
-            ex(
+            make_example(
                 "Exception chaining preserves the original cause",
                 "`raise X from Y` keeps the debugging trail intact instead of discarding the lower-level failure.",
-                b('''
+                strip_margin('''
                 try:
                     int("not-a-number")
                 except ValueError as exc:
@@ -1104,10 +1142,10 @@ concepts.extend([
                 '''),
                 "The traceback will show both the original `ValueError` and the higher-level `RuntimeError`, which is much more informative than hiding the cause.",
             ),
-            ex(
+            make_example(
                 "Custom hierarchy and the danger of broad catches",
                 "Specific exceptions make error handling deliberate instead of vague.",
-                b('''
+                strip_margin('''
                 class DatabaseError(Exception):
                     pass
 
@@ -1127,7 +1165,7 @@ concepts.extend([
         ],
         "Returning sentinel values for every failure quickly becomes noisy and easy to ignore. Exceptions keep the success path cleaner while preserving full error context.",
     ),
-    c(
+    make_concept(
         "PY19",
         4,
         "Functions",
@@ -1141,10 +1179,10 @@ concepts.extend([
         "Functions exist so programs can name reusable behavior, test pieces independently, and compose larger systems without repeating the same steps line by line.",
         "call site -> new stack frame -> local names -> return value or None -> caller resumes",
         [
-            ex(
+            make_example(
                 "A function returns `None` when you do not return explicitly",
                 "Understanding the implicit default matters because `print(do_work())` often surprises beginners.",
-                b('''
+                strip_margin('''
                 def greet(name):
                     print(f"Hello, {name}")
 
@@ -1153,10 +1191,10 @@ concepts.extend([
                 '''),
                 "The greeting prints first, then `None` prints because the function finished without an explicit `return`.",
             ),
-            ex(
+            make_example(
                 "Functions are first-class objects",
                 "You can store them, pass them around, and call them later because functions are objects too.",
-                b('''
+                strip_margin('''
                 def double(n):
                     return n * 2
 
@@ -1166,10 +1204,10 @@ concepts.extend([
                 '''),
                 "The function lives in a list and is called through another name. That property underpins callbacks, decorators, and higher-order functions.",
             ),
-            ex(
+            make_example(
                 "The mutable default argument trap",
                 "Default arguments are evaluated once when the function is defined, not each time it is called.",
-                b('''
+                strip_margin('''
                 def append_item(item, bucket=[]):
                     bucket.append(item)
                     return bucket
@@ -1182,7 +1220,7 @@ concepts.extend([
         ],
         "Functions do not replace every pattern. When behavior and state need to travel together, a class or closure can be the better abstraction.",
     ),
-    c(
+    make_concept(
         "PY20",
         4,
         "Arguments Deep-Dive",
@@ -1196,10 +1234,10 @@ concepts.extend([
         "Function signatures are contracts. Python gives you tools to make those contracts explicit so callers cannot accidentally rely on argument styles you never meant to support.",
         "call arguments -> matched left to right to parameters -> extra positional go to *args -> extra named go to **kwargs",
         [
-            ex(
+            make_example(
                 "A signature using every major parameter kind",
                 "This is the full grammar in one place: positional-only, regular positional-or-keyword, variadic positional, keyword-only, and variadic keyword.",
-                b('''
+                strip_margin('''
                 def api(version, /, resource, *parts, format="json", retries=3, **options):
                     return version, resource, parts, format, retries, options
 
@@ -1207,10 +1245,10 @@ concepts.extend([
                 '''),
                 "Arguments before `/` must be positional. Arguments after `*parts` but before `**options` are keyword-only.",
             ),
-            ex(
+            make_example(
                 "Positional-only parameters prevent fragile keyword usage",
                 "Added in Python 3.8, `/` lets library authors reserve the freedom to rename parameters later.",
-                b('''
+                strip_margin('''
                 def divide(x, y, /):
                     return x / y
 
@@ -1222,10 +1260,10 @@ concepts.extend([
                 '''),
                 "The function works positionally and rejects keyword calls. That protects the API surface.",
             ),
-            ex(
+            make_example(
                 "Unpack arguments at the call site",
                 "`*` and `**` are useful on both sides of a function call.",
-                b('''
+                strip_margin('''
                 def greet(name, city, punctuation="!"):
                     print(f"Hello {name} from {city}{punctuation}")
 
@@ -1241,7 +1279,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY21",
         4,
         "Scope & LEGB Rule",
@@ -1255,10 +1293,10 @@ concepts.extend([
         "Scope rules exist so Python can decide which object a name should refer to without forcing every reference to be fully qualified.",
         "Local -> Enclosing -> Global -> Builtin\nfirst matching name wins",
         [
-            ex(
+            make_example(
                 "Name lookup follows LEGB",
                 "A nested function checks its own locals first, then outer function locals, then module globals, then builtins.",
-                b('''
+                strip_margin('''
                 label = "global"
 
                 def outer():
@@ -1271,10 +1309,10 @@ concepts.extend([
                 '''),
                 "`inner` prints `enclosing` because it finds the name in the nearest enclosing scope before it ever considers the global name.",
             ),
-            ex(
+            make_example(
                 "Loop-variable closure trap and the default-argument fix",
                 "Closures capture the variable, not its value at each iteration.",
-                b('''
+                strip_margin('''
                 funcs = []
                 for n in range(3):
                     funcs.append(lambda n=n: n)
@@ -1282,10 +1320,10 @@ concepts.extend([
                 '''),
                 "Without `n=n`, every lambda would use the final loop value. Binding the current value into a default argument captures the value you intended.",
             ),
-            ex(
+            make_example(
                 "Use `nonlocal` to update an enclosing name",
                 "`nonlocal` is the closure-friendly tool for stateful function factories.",
-                b('''
+                strip_margin('''
                 def make_counter():
                     count = 0
                     def increment():
@@ -1302,7 +1340,7 @@ concepts.extend([
         ],
         "Global state is easy to reach but hard to reason about. Closures and explicit arguments are usually safer than reaching for `global` by default.",
     ),
-    c(
+    make_concept(
         "PY22",
         4,
         "Lambda Functions",
@@ -1316,28 +1354,28 @@ concepts.extend([
         "Lambdas exist so tiny functions can be written inline at the point of use, but Python keeps them intentionally limited so they do not turn into unreadable mini-programs.",
         "lambda parameters: expression -> function object\nno statements, only one expression result",
         [
-            ex(
+            make_example(
                 "A lambda used as a sorting key",
                 "This is the most common and idiomatic use case: a tiny transformation at the call site.",
-                b('''
+                strip_margin('''
                 people = [{"name": "Ada", "age": 36}, {"name": "Grace", "age": 85}]
                 print(sorted(people, key=lambda person: person["age"]))
                 '''),
                 "The lambda is short, local, and obvious. A named helper would add indirection without adding clarity here.",
             ),
-            ex(
+            make_example(
                 "Lambdas are still normal function objects",
                 "They can be passed around like any other callable.",
-                b('''
+                strip_margin('''
                 operations = [lambda x: x + 1, lambda x: x * 2]
                 print([op(10) for op in operations])
                 '''),
                 "Both lambdas behave like ordinary functions, but they do not carry helpful names in tracebacks or documentation.",
             ),
-            ex(
+            make_example(
                 "Named functions win once logic gets interesting",
                 "The limitation to expressions is deliberate. Branching, assertions, and richer documentation belong in a real `def`.",
-                b('''
+                strip_margin('''
                 def normalize(name):
                     name = name.strip().title()
                     if not name:
@@ -1351,7 +1389,7 @@ concepts.extend([
         ],
         "Use lambdas for tiny one-off callables. The moment you need comments, branching, or a meaningful name, switch to `def`.",
     ),
-    c(
+    make_concept(
         "PY23",
         4,
         "Higher-Order Functions",
@@ -1365,10 +1403,10 @@ concepts.extend([
         "Once functions are first-class, you can parameterize behavior itself instead of hard-coding every decision into one giant function.",
         "callable in -> wrapper or transformed result out",
         [
-            ex(
+            make_example(
                 "Re-implement a tiny `map`",
                 "This proves that 'apply a function to each item' is just a pattern, not magic.",
-                b('''
+                strip_margin('''
                 def my_map(func, items):
                     result = []
                     for item in items:
@@ -1379,10 +1417,10 @@ concepts.extend([
                 '''),
                 "Understanding the loop underneath makes `map()` much less mysterious.",
             ),
-            ex(
+            make_example(
                 "`partial` preconfigures a function",
                 "This is useful when you want a specialized callable without subclassing or writing a wrapper by hand.",
-                b('''
+                strip_margin('''
                 from functools import partial
 
                 def power(base, exponent):
@@ -1393,10 +1431,10 @@ concepts.extend([
                 '''),
                 "`square` is a new callable with one argument already fixed.",
             ),
-            ex(
+            make_example(
                 "Caching turns expensive pure calls into fast repeated lookups",
                 "`lru_cache` wraps a function and remembers previous results based on arguments.",
-                b('''
+                strip_margin('''
                 from functools import lru_cache
 
                 @lru_cache(maxsize=None)
@@ -1411,7 +1449,7 @@ concepts.extend([
         ],
         "Higher-order tools are powerful, but a straightforward loop is often clearer when the transformation or filtering logic is long.",
     ),
-    c(
+    make_concept(
         "PY24",
         4,
         "Recursion",
@@ -1425,10 +1463,10 @@ concepts.extend([
         "Some problems are naturally self-similar: tree traversal, directory walking, recursive descent parsing. Recursion mirrors that structure directly.",
         "call n -> call n-1 -> call n-2 ... until base case\nreturns unwind in reverse order",
         [
-            ex(
+            make_example(
                 "Factorial with a base case",
                 "This is the classic shape of a recursive function: base case plus smaller recursive call.",
-                b('''
+                strip_margin('''
                 def factorial(n):
                     if n == 0:
                         return 1
@@ -1438,10 +1476,10 @@ concepts.extend([
                 '''),
                 "Picture the stack frames piling up until `n == 0`, then returning 1, 1*1, 2*1, 3*2, and so on back out.",
             ),
-            ex(
+            make_example(
                 "Memoization avoids repeated work",
                 "Naive recursion often recomputes the same subproblems many times.",
-                b('''
+                strip_margin('''
                 from functools import lru_cache
 
                 @lru_cache(maxsize=None)
@@ -1452,10 +1490,10 @@ concepts.extend([
                 '''),
                 "Caching makes recursive Fibonacci practical by turning repeated overlapping calls into lookups.",
             ),
-            ex(
+            make_example(
                 "An explicit stack can replace recursion",
                 "CPython does not optimize tail recursion away, so an iterative version is sometimes safer for deep inputs.",
-                b('''
+                strip_margin('''
                 def factorial_iterative(n):
                     stack = list(range(1, n + 1))
                     result = 1
@@ -1473,7 +1511,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY25",
         5,
         "Classes & Objects",
@@ -1487,10 +1525,10 @@ concepts.extend([
         "Once functions alone stop being enough, you need a way to keep related state and behavior together. Classes are Python's built-in tool for that job.",
         "class statement runs -> class object created -> calling class makes instance -> method call passes instance as self",
         [
-            ex(
+            make_example(
                 "A complete `BankAccount` class",
                 "This is the common shape of a class: initializer, instance state, and methods that operate on that state.",
-                b('''
+                strip_margin('''
                 class BankAccount:
                     bank_name = "Python Credit Union"
 
@@ -1507,10 +1545,10 @@ concepts.extend([
                 '''),
                 "Each instance gets its own `owner` and `balance`, while `bank_name` lives on the class and is shared unless an instance overrides it.",
             ),
-            ex(
+            make_example(
                 "Class body execution is real code",
                 "A class statement is not just metadata. Python executes the body to build the namespace for the new class.",
-                b('''
+                strip_margin('''
                 class Demo:
                     print("class body executing")
                     label = "ready"
@@ -1519,10 +1557,10 @@ concepts.extend([
                 '''),
                 "The print inside the class body runs immediately when Python defines the class, not later when you create an instance.",
             ),
-            ex(
+            make_example(
                 "Attribute lookup checks the instance before the class",
                 "That lookup chain explains why class attributes act like defaults.",
-                b('''
+                strip_margin('''
                 class Counter:
                     step = 1
 
@@ -1536,7 +1574,7 @@ concepts.extend([
         ],
         "A plain function plus a dict can sometimes be enough. Reach for a class when the relationship between state and behavior is central, not incidental.",
     ),
-    c(
+    make_concept(
         "PY26",
         5,
         "The Object Model",
@@ -1550,10 +1588,10 @@ concepts.extend([
         "The object model matters because Python exposes it directly. Many advanced features are just ordinary object operations once you see that everything participates in the same system.",
         "object -> identity + type + attributes\nCPython tracks references and runs cyclic GC for loops of references",
         [
-            ex(
+            make_example(
                 "Numbers, functions, classes, and modules are all objects",
                 "The model is uniform, which is why introspection feels natural in Python.",
-                b('''
+                strip_margin('''
                 import math
 
                 def greet():
@@ -1564,10 +1602,10 @@ concepts.extend([
                 '''),
                 "Each item has a type because each item is an object. That includes the function and the module.",
             ),
-            ex(
+            make_example(
                 "Reference counting is visible",
                 "CPython keeps an immediate count of references to many objects.",
-                b('''
+                strip_margin('''
                 import sys
 
                 value = []
@@ -1576,10 +1614,10 @@ concepts.extend([
                 '''),
                 "The exact number is implementation-dependent because the function call itself adds a temporary reference, but the count changes when names start or stop pointing to the object.",
             ),
-            ex(
+            make_example(
                 "Cycles require the garbage collector",
                 "Reference counts alone cannot free objects that keep each other alive in a loop.",
-                b('''
+                strip_margin('''
                 import gc
 
                 a = []
@@ -1593,7 +1631,7 @@ concepts.extend([
         ],
         "Identity questions (`is`) are narrower than equality questions (`==`). Use identity only when you truly care about sameness of object, such as with `None` or shared sentinels.",
     ),
-    c(
+    make_concept(
         "PY27",
         5,
         "Inheritance",
@@ -1607,10 +1645,10 @@ concepts.extend([
         "Inheritance exists because some abstractions are genuine specializations of others, but Python gives you both inheritance and composition because reuse alone is not enough to justify an inheritance tree.",
         "class -> __mro__ tuple decides lookup order\nsuper() walks that order cooperatively",
         [
-            ex(
+            make_example(
                 "Simple inheritance and override",
                 "A subclass can reuse behavior and then extend or replace parts of it.",
-                b('''
+                strip_margin('''
                 class Animal:
                     def speak(self):
                         return "sound"
@@ -1623,10 +1661,10 @@ concepts.extend([
                 '''),
                 "`Dog` inherits from `Animal` but overrides `speak` with more specific behavior.",
             ),
-            ex(
+            make_example(
                 "Diamond inheritance and MRO",
                 "Python uses C3 linearization so multiple inheritance still has one deterministic lookup order.",
-                b('''
+                strip_margin('''
                 class A: pass
                 class B(A): pass
                 class C(A): pass
@@ -1635,10 +1673,10 @@ concepts.extend([
                 '''),
                 "The MRO shows the order Python will follow when it looks for attributes. This is why `super()` is about the next class in MRO, not a hard-coded parent name.",
             ),
-            ex(
+            make_example(
                 "Composition often wins",
                 "If one object mainly needs another object to do its job, composition is usually simpler than subclassing.",
-                b('''
+                strip_margin('''
                 class Engine:
                     def start(self):
                         return "engine on"
@@ -1654,7 +1692,7 @@ concepts.extend([
         ],
         "Use inheritance when the subtype relationship is real and cooperative method dispatch adds value. Use composition when you mainly want to assemble behavior.",
     ),
-    c(
+    make_concept(
         "PY28",
         5,
         "Encapsulation",
@@ -1668,10 +1706,10 @@ concepts.extend([
         "Encapsulation exists to protect invariants and communicate intended use. Python chooses social and technical tools together instead of pretending enforcement is absolute.",
         "public name -> normal attribute\n_single -> internal convention\n__double -> name-mangled to reduce accidental clashes",
         [
-            ex(
+            make_example(
                 "Name mangling is not true privacy",
                 "Double-leading underscores mainly prevent accidental attribute collisions in subclasses.",
-                b('''
+                strip_margin('''
                 class SecretBox:
                     def __init__(self):
                         self.__token = "abc123"
@@ -1681,10 +1719,10 @@ concepts.extend([
                 '''),
                 "The attribute is still reachable because name mangling changes the external attribute name; it does not create an impenetrable wall.",
             ),
-            ex(
+            make_example(
                 "`@property` can validate writes",
                 "Properties let an attribute-like API enforce rules without changing the call site into a method call.",
-                b('''
+                strip_margin('''
                 class Temperature:
                     def __init__(self, celsius):
                         self.celsius = celsius
@@ -1702,10 +1740,10 @@ concepts.extend([
                 '''),
                 "Callers use attribute syntax, but the setter enforces the invariant.",
             ),
-            ex(
+            make_example(
                 "`__slots__` removes the instance dictionary",
                 "When you will create many tiny objects, slots can save memory by fixing the allowed attribute set.",
-                b('''
+                strip_margin('''
                 class Plain:
                     def __init__(self):
                         self.x = 1
@@ -1727,7 +1765,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY29",
         5,
         "Dunder / Magic Methods",
@@ -1741,10 +1779,10 @@ concepts.extend([
         "These hooks exist so your objects can feel native in the language instead of forcing every interaction through ad hoc method names.",
         "built-in syntax -> Python looks for matching dunder method -> your object supplies behavior",
         [
-            ex(
+            make_example(
                 "A `Vector` with arithmetic and representation hooks",
                 "This one class can integrate with `print`, `repr`, `len`, iteration, containment, equality, hashing, calls, and operators.",
-                b('''
+                strip_margin('''
                 class Vector:
                     def __init__(self, *values):
                         self.values = tuple(values)
@@ -1779,10 +1817,10 @@ concepts.extend([
                 '''),
                 "Each operation routes through a matching dunder. That is how your class plugs into core language syntax.",
             ),
-            ex(
+            make_example(
                 "Iteration and indexing come from protocols, not special treatment",
                 "Built-ins like `for` and `in` depend on these hooks.",
-                b('''
+                strip_margin('''
                 v = Vector(3, 4, 5)
                 print(list(v))
                 print(v[1])
@@ -1790,10 +1828,10 @@ concepts.extend([
                 '''),
                 "Because the class implements iteration and item access, it behaves naturally in loops and membership checks.",
             ),
-            ex(
+            make_example(
                 "Context management uses dunders too",
                 "`with` dispatches to `__enter__` and `__exit__` exactly the same way operators dispatch to arithmetic dunders.",
-                b('''
+                strip_margin('''
                 class Session:
                     def __enter__(self):
                         print("open")
@@ -1810,7 +1848,7 @@ concepts.extend([
         ],
         "Only implement dunder methods that make semantic sense. A surprising `__len__` or `__eq__` is worse than omitting the hook.",
     ),
-    c(
+    make_concept(
         "PY30",
         5,
         "Abstract Base Classes and Protocols",
@@ -1824,10 +1862,10 @@ concepts.extend([
         "Interfaces matter because larger programs need shared expectations about behavior, but Python offers both explicit inheritance and structural compatibility depending on the style of code you want.",
         "ABC -> class must inherit and implement\nProtocol -> object only needs matching methods/attributes",
         [
-            ex(
+            make_example(
                 "An abstract base class defines required methods",
                 "ABCs are useful when you want explicit participation in a hierarchy.",
-                b('''
+                strip_margin('''
                 from abc import ABC, abstractmethod
 
                 class Shape(ABC):
@@ -1845,10 +1883,10 @@ concepts.extend([
                 '''),
                 "Trying to instantiate `Shape` directly would fail because its abstract contract is incomplete.",
             ),
-            ex(
+            make_example(
                 "A protocol checks for structure",
                 "Protocols let unrelated classes cooperate if they provide the required methods.",
-                b('''
+                strip_margin('''
                 from typing import Protocol, runtime_checkable
 
                 @runtime_checkable
@@ -1863,10 +1901,10 @@ concepts.extend([
                 '''),
                 "`Icon` never inherited from `Drawable`, but it still satisfies the protocol because it has the expected method.",
             ),
-            ex(
+            make_example(
                 "Protocols fit duck typing naturally",
                 "They document expectations without forcing a central base class into every design.",
-                b('''
+                strip_margin('''
                 def render(item: Drawable) -> None:
                     print(item.draw())
 
@@ -1877,7 +1915,7 @@ concepts.extend([
         ],
         "Choose ABCs when explicit hierarchy membership matters. Choose protocols when you want interface documentation that still respects duck typing.",
     ),
-    c(
+    make_concept(
         "PY31",
         5,
         "Dataclasses",
@@ -1891,10 +1929,10 @@ concepts.extend([
         "A lot of classes are mostly data containers with validation. Dataclasses remove the boilerplate so you can focus on the fields and invariants instead of hand-writing the same methods every time.",
         "field declarations -> generated methods -> optional post-init validation and transforms",
         [
-            ex(
+            make_example(
                 "A basic dataclass",
                 "The decorator generates initializer and representation methods automatically.",
-                b('''
+                strip_margin('''
                 from dataclasses import dataclass
 
                 @dataclass
@@ -1906,10 +1944,10 @@ concepts.extend([
                 '''),
                 "This is ideal when the class is mostly state with little custom behavior.",
             ),
-            ex(
+            make_example(
                 "Use `default_factory` instead of a mutable default",
                 "Dataclasses share the same 'evaluate once' default rule as normal functions, so mutable defaults still need special handling.",
-                b('''
+                strip_margin('''
                 from dataclasses import dataclass, field
 
                 @dataclass
@@ -1922,10 +1960,10 @@ concepts.extend([
                 '''),
                 "`default_factory` creates a fresh list per instance, avoiding the classic shared-mutable-default bug.",
             ),
-            ex(
+            make_example(
                 "`__post_init__`, `frozen`, and `slots`",
                 "Dataclasses still let you validate and derive fields after automatic initialization.",
-                b('''
+                strip_margin('''
                 from dataclasses import dataclass, field
 
                 @dataclass(frozen=True, slots=True)
@@ -1946,7 +1984,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY32",
         6,
         "The Iterator Protocol",
@@ -1960,10 +1998,10 @@ concepts.extend([
         "Iteration exists so one loop syntax can consume lists, files, generators, custom classes, and more without hard-coding a container type into the language.",
         "iterable -> iter() returns iterator -> repeated next() calls -> StopIteration ends the loop",
         [
-            ex(
+            make_example(
                 "A custom `Range` iterator",
                 "This shows the minimum protocol a `for` loop needs.",
-                b('''
+                strip_margin('''
                 class Range:
                     def __init__(self, start, stop):
                         self.current = start
@@ -1981,10 +2019,10 @@ concepts.extend([
                 '''),
                 "Once `StopIteration` is raised, the loop ends normally rather than treating exhaustion as an error.",
             ),
-            ex(
+            make_example(
                 "A `for` loop desugars to `iter()` plus `next()`",
                 "The friendly syntax is just a wrapper around the iterator protocol.",
-                b('''
+                strip_margin('''
                 items = [10, 20, 30]
                 iterator = iter(items)
                 while True:
@@ -1995,10 +2033,10 @@ concepts.extend([
                 '''),
                 "This manual loop is what `for item in items` conceptually hides for you.",
             ),
-            ex(
+            make_example(
                 "An iterable can return a separate iterator object",
                 "Many containers are iterable without being their own iterator.",
-                b('''
+                strip_margin('''
                 text = "abc"
                 iterator = iter(text)
                 print(next(iterator), next(iterator), next(iterator))
@@ -2008,7 +2046,7 @@ concepts.extend([
         ],
         "Implement the protocol only when you need custom iteration behavior. For one-off lazy sequences, generators are usually simpler.",
     ),
-    c(
+    make_concept(
         "PY33",
         6,
         "Generators",
@@ -2022,10 +2060,10 @@ concepts.extend([
         "Generators exist because many sequences are too large, too slow, or even infinite to materialize all at once.",
         "generator function call -> generator object\nnext() resumes until next yield or StopIteration",
         [
-            ex(
+            make_example(
                 "An infinite Fibonacci generator",
                 "Lazy generation means the sequence can conceptually continue forever.",
-                b('''
+                strip_margin('''
                 def fib():
                     a, b = 0, 1
                     while True:
@@ -2037,10 +2075,10 @@ concepts.extend([
                 '''),
                 "The generator only computes as many numbers as the caller asks for.",
             ),
-            ex(
+            make_example(
                 "`yield from` delegates to a sub-generator",
                 "This lets one generator compose another without manual nested loops.",
-                b('''
+                strip_margin('''
                 def letters():
                     yield from "abc"
 
@@ -2048,10 +2086,10 @@ concepts.extend([
                 '''),
                 "Delegation is especially useful in recursive traversals and pipeline-style code.",
             ),
-            ex(
+            make_example(
                 "Generators keep memory use low",
                 "A list of a million numbers allocates the whole result; a generator only stores its current state.",
-                b('''
+                strip_margin('''
                 numbers = (n * n for n in range(1_000_000))
                 print(numbers)
                 print(next(numbers), next(numbers), next(numbers))
@@ -2061,7 +2099,7 @@ concepts.extend([
         ],
         "If you need random access, repeated traversal, or the full data set immediately, a list may still be the better tool.",
     ),
-    c(
+    make_concept(
         "PY34",
         6,
         "Coroutines Basics via Generators",
@@ -2075,10 +2113,10 @@ concepts.extend([
         "These generator capabilities matter because they prove a paused computation can be resumed from the outside, which is the conceptual bridge toward modern asynchronous programming.",
         "caller resumes suspended frame with data or exception -> coroutine handles it -> yields control again",
         [
-            ex(
+            make_example(
                 "Receive data with `send()`",
                 "A coroutine can wait at `yield` and accept a value from the caller when resumed.",
-                b('''
+                strip_margin('''
                 def accumulator():
                     total = 0
                     while True:
@@ -2092,10 +2130,10 @@ concepts.extend([
                 '''),
                 "The coroutine yields its current total, then receives the next value through `send`.",
             ),
-            ex(
+            make_example(
                 "Inject an exception with `throw()`",
                 "External code can resume the suspended coroutine by raising into it.",
-                b('''
+                strip_margin('''
                 def worker():
                     try:
                         yield "ready"
@@ -2108,10 +2146,10 @@ concepts.extend([
                 '''),
                 "`throw()` enters the coroutine at the suspension point, just as if the exception happened inside it.",
             ),
-            ex(
+            make_example(
                 "A tiny cooperative scheduler idea",
                 "Multiple generators can be resumed round-robin, which hints at how asynchronous schedulers work.",
-                b('''
+                strip_margin('''
                 def task(name):
                     for step in range(2):
                         yield f"{name}:{step}"
@@ -2126,7 +2164,7 @@ concepts.extend([
         ],
         "Today you should usually write new asynchronous code with `async`/`await`, but generator coroutines explain the historical model underneath.",
     ),
-    c(
+    make_concept(
         "PY35",
         7,
         "Decorators",
@@ -2140,10 +2178,10 @@ concepts.extend([
         "Decorators exist because cross-cutting behavior like timing, retries, caching, logging, or access control should not require copy-pasting the same scaffolding into every function.",
         "target function -> decorator receives target -> returns wrapper -> original name now points at wrapper",
         [
-            ex(
+            make_example(
                 "A simple timing decorator",
                 "The wrapper adds behavior before and after the original function call.",
-                b('''
+                strip_margin('''
                 import functools
                 import time
 
@@ -2169,10 +2207,10 @@ concepts.extend([
                 '''),
                 "`@wraps` preserves metadata like the original function name and docstring.",
             ),
-            ex(
+            make_example(
                 "A decorator with arguments",
                 "A decorator factory returns the actual decorator when configuration is needed.",
-                b('''
+                strip_margin('''
                 import functools
 
                 def retry(times):
@@ -2203,10 +2241,10 @@ concepts.extend([
                 '''),
                 "The outer function handles configuration and the inner function wraps the target.",
             ),
-            ex(
+            make_example(
                 "Decorator stack order",
                 "`@A` above `@B` means `A(B(func))`, so the lower decorator runs closest to the original function.",
-                b('''
+                strip_margin('''
                 def A(func):
                     def wrapper():
                         print("A before")
@@ -2236,7 +2274,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY36",
         7,
         "Context Managers",
@@ -2250,10 +2288,10 @@ concepts.extend([
         "Resource lifetimes are easy to get wrong when cleanup must happen even on exceptions. Context managers put that cleanup rule in one place.",
         "with target as name -> __enter__ runs -> block executes -> __exit__ runs even on exception",
         [
-            ex(
+            make_example(
                 "A class-based context manager",
                 "This is the raw protocol behind file objects and many library resources.",
-                b('''
+                strip_margin('''
                 class Timer:
                     def __enter__(self):
                         print("start")
@@ -2267,10 +2305,10 @@ concepts.extend([
                 '''),
                 "`__exit__` runs whether the block succeeds or fails, which is why context managers are so good for cleanup.",
             ),
-            ex(
+            make_example(
                 "A generator-based context manager",
                 "`contextlib.contextmanager` lets you write setup before the `yield` and cleanup after it.",
-                b('''
+                strip_margin('''
                 from contextlib import contextmanager
 
                 @contextmanager
@@ -2286,10 +2324,10 @@ concepts.extend([
                 '''),
                 "The code after `yield` always runs on exit, mirroring a `finally` block.",
             ),
-            ex(
+            make_example(
                 "`ExitStack` manages a dynamic number of contexts",
                 "When you do not know the resource count ahead of time, nesting `with` statements manually is awkward.",
-                b('''
+                strip_margin('''
                 from contextlib import ExitStack
 
                 with ExitStack() as stack:
@@ -2301,7 +2339,7 @@ concepts.extend([
         ],
         "Use plain `try/finally` when a one-off cleanup is simpler than creating a reusable context manager object.",
     ),
-    c(
+    make_concept(
         "PY37",
         7,
         "Descriptors",
@@ -2315,10 +2353,10 @@ concepts.extend([
         "Descriptors exist because attribute access is a fundamental operation in Python, and some attributes need behavior rather than dumb storage.",
         "attribute lookup -> class attribute is descriptor? -> descriptor hook runs instead of plain value access",
         [
-            ex(
+            make_example(
                 "A validating descriptor",
                 "Validation logic can live in one reusable object instead of being repeated in every setter.",
-                b('''
+                strip_margin('''
                 class TypeEnforced:
                     def __init__(self, expected_type):
                         self.expected_type = expected_type
@@ -2347,10 +2385,10 @@ concepts.extend([
                 '''),
                 "The descriptor decides how reads and writes happen for every class that uses it.",
             ),
-            ex(
+            make_example(
                 "Use the descriptor inside a class",
                 "Descriptors become powerful when multiple instances share the same access rule.",
-                b('''
+                strip_margin('''
                 class User:
                     age = TypeEnforced(int)
                     def __init__(self, age):
@@ -2360,19 +2398,31 @@ concepts.extend([
                 '''),
                 "The assignment goes through `TypeEnforced.__set__`, so invalid values are rejected before they land on the instance.",
             ),
-            ex(
+            make_example(
                 "`property` is a descriptor",
                 "The `property` object implements descriptor hooks for you.",
-                b('''
-                print(hasattr(property, "__get__"))
-                print(hasattr(property, "__set__"))
+                strip_margin('''
+                class Celsius:
+                    @property
+                    def value(self):
+                        return self._v
+                    @value.setter
+                    def value(self, v):
+                        self._v = float(v)
+
+                t = Celsius(); t.value = 100
+                print(t.value)
+
+                # property itself is a descriptor - it has the protocol hooks
+                print(hasattr(property, "__get__"), hasattr(property, "__set__"))
+                print("@property works by wrapping your getter/setter in a descriptor object")
                 '''),
                 "That is why `@property` can intercept attribute reads and writes without changing call syntax.",
             ),
         ],
         "Most projects should start with `@property`. Reach for custom descriptors when the same access policy must be reused across many attributes or classes.",
     ),
-    c(
+    make_concept(
         "PY38",
         7,
         "Metaclasses",
@@ -2386,20 +2436,20 @@ concepts.extend([
         "Metaclasses exist because some frameworks need to inspect or modify classes at definition time, but that is a much rarer need than ordinary instance behavior.",
         "class statement -> metaclass builds class object -> class later builds instances",
         [
-            ex(
+            make_example(
                 "Build a class with `type()` directly",
                 "This makes the 'class object built by a metaclass' idea concrete.",
-                b('''
+                strip_margin('''
                 Animal = type("Animal", (), {"kind": "animal"})
                 Dog = type("Dog", (Animal,), {"speak": lambda self: "woof"})
                 print(Dog().speak(), Dog.kind)
                 '''),
                 "`type` receives a class name, base classes, and a namespace dictionary, then returns a new class object.",
             ),
-            ex(
+            make_example(
                 "A metaclass can auto-register subclasses",
                 "This is a real use case for plugin systems and ORMs.",
-                b('''
+                strip_margin('''
                 registry = {}
 
                 class RegisteringMeta(type):
@@ -2414,10 +2464,10 @@ concepts.extend([
                 '''),
                 "Defining a new class is enough to populate the registry because the metaclass runs during class creation.",
             ),
-            ex(
+            make_example(
                 "`__init_subclass__` is usually simpler",
                 "Many metaclass use cases can be handled with a normal base class hook instead.",
-                b('''
+                strip_margin('''
                 registry = []
 
                 class PluginBase:
@@ -2437,7 +2487,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY39",
         8,
         "Modules",
@@ -2451,10 +2501,10 @@ concepts.extend([
         "Modules exist so code can be organized into files with explicit names instead of one giant global namespace.",
         "import statement -> finder/loader locate file -> module object created -> top-level code runs once -> module cached in sys.modules",
         [
-            ex(
+            make_example(
                 "Inspect an imported module object",
                 "Modules are objects with attributes just like many other things in Python.",
-                b('''
+                strip_margin('''
                 import math
                 import sys
 
@@ -2464,10 +2514,10 @@ concepts.extend([
                 '''),
                 "Importing loads the module and caches it in `sys.modules` so repeated imports reuse the same module object.",
             ),
-            ex(
+            make_example(
                 "`__main__` distinguishes script execution from import",
                 "A module often wants a small demo or CLI entry point that should not run on every import.",
-                b('''
+                strip_margin('''
                 if __name__ == "__main__":
                     print("running as a script")
                 else:
@@ -2475,20 +2525,34 @@ concepts.extend([
                 '''),
                 "When the file is executed directly, `__name__` becomes `\"__main__\"`. When imported, it becomes the module's real name.",
             ),
-            ex(
+            make_example(
                 "A circular import symptom",
                 "Circular imports happen when two modules need each other during top-level initialization.",
-                b('''
-                print("module_a imports module_b")
-                print("module_b imports module_a")
-                print("fixes: move imports inside functions, extract shared code, or depend on interfaces instead")
+                strip_margin('''
+                import sys, types
+
+                # Simulate the AttributeError that occurs during a real circular import:
+                # module A has not finished defining its names when module B tries to read one.
+                fake_a = types.ModuleType("fake_a")
+                sys.modules["fake_a"] = fake_a
+                # fake_a.VALUE has not been set yet (still loading)
+                try:
+                    value = fake_a.VALUE
+                except AttributeError as exc:
+                    print("Circular import symptom:", exc)
+
+                # Fix: ensure the name exists before the other module imports it.
+                fake_a.VALUE = 99
+                print("After fix, VALUE is readable:", fake_a.VALUE)
+                print("Real fixes: late imports inside functions, or extract shared code to a third module")
+                del sys.modules["fake_a"]
                 '''),
                 "The core problem is top-level code needing names that are not ready yet. Breaking the cycle usually means moving or reorganizing responsibilities.",
             ),
         ],
         "Too many tiny modules can also hurt readability. Split code where the namespace and dependency boundary help, not just because a file got a little long.",
     ),
-    c(
+    make_concept(
         "PY40",
         8,
         "Packages",
@@ -2502,10 +2566,10 @@ concepts.extend([
         "Packages exist because once one file is not enough, you need a way to structure many modules into a coherent API surface.",
         "package directory -> modules and subpackages -> optional __init__.py controls package namespace",
         [
-            ex(
+            make_example(
                 "Basic package layout",
                 "A package creates a stable import path for related modules.",
-                b('''
+                strip_margin('''
                 layout = """
                 shop/
                     __init__.py
@@ -2516,10 +2580,10 @@ concepts.extend([
                 '''),
                 "With that structure, callers can import `shop.models` or symbols re-exported from `shop.__init__`.",
             ),
-            ex(
+            make_example(
                 "`__all__` only affects star imports",
                 "It does not hide attributes from direct access; it only controls what `from package import *` pulls in.",
-                b('''
+                strip_margin('''
                 __all__ = ["public_name"]
                 public_name = 1
                 internal_name = 2
@@ -2527,18 +2591,35 @@ concepts.extend([
                 '''),
                 "Tools and humans should still treat leading underscores and explicit exports as documentation signals, not hard security boundaries.",
             ),
-            ex(
+            make_example(
                 "Namespace packages can span multiple directories",
                 "Modern Python can treat directories without `__init__.py` as parts of one package namespace.",
-                b('''
-                print("namespace packages are useful when multiple distributions contribute to one top-level package")
+                strip_margin('''
+                import pathlib, sys
+
+                # Build two separate directories that both contribute to one 'plugins' namespace.
+                root = pathlib.Path("_nspkg_demo")
+                (root / "dist_a" / "plugins").mkdir(parents=True, exist_ok=True)
+                (root / "dist_b" / "plugins").mkdir(parents=True, exist_ok=True)
+                # No __init__.py -> Python treats each as a namespace package fragment.
+                (root / "dist_a" / "plugins" / "alpha.py").write_text("name='alpha'")
+                (root / "dist_b" / "plugins" / "beta.py").write_text("name='beta'")
+
+                # Both roots on sys.path -> Python merges the plugins namespace automatically.
+                sys.path[:0] = [str(root / "dist_a"), str(root / "dist_b")]
+                import plugins.alpha, plugins.beta  # one namespace, two physical locations
+                print(plugins.alpha.name, plugins.beta.name)
+                print("No __init__.py needed; Python merges both directories into one package")
+
+                sys.path[:2] = []
+                import shutil; shutil.rmtree(root, ignore_errors=True)
                 '''),
                 "This is common in plugin ecosystems where separate installs extend the same package name.",
             ),
         ],
         "Relative imports can be handy inside a package, but overusing them can make large codebases harder to navigate than explicit absolute imports.",
     ),
-    c(
+    make_concept(
         "PY41",
         8,
         "Virtual Environments & Dependency Management",
@@ -2552,10 +2633,10 @@ concepts.extend([
         "Dependency isolation matters because Python projects share an interpreter by default, and shared global installs quickly become a conflict factory.",
         "system interpreter + isolated site-packages path -> project-specific imports and tools",
         [
-            ex(
+            make_example(
                 "Show where packages are loaded from",
                 "`sys.path` reveals why environments matter: it controls where imports search.",
-                b('''
+                strip_margin('''
                 import sys
                 print(sys.prefix)
                 print(sys.base_prefix)
@@ -2563,10 +2644,10 @@ concepts.extend([
                 '''),
                 "In a virtual environment, `sys.prefix` usually differs from `sys.base_prefix`, and the search path points at environment-local packages first.",
             ),
-            ex(
+            make_example(
                 "A minimal `pyproject.toml`",
                 "Modern builds declare project metadata and build requirements in one standard file.",
-                b('''
+                strip_margin('''
                 pyproject = """
                 [build-system]
                 requires = ["setuptools>=68", "wheel"]
@@ -2581,13 +2662,25 @@ concepts.extend([
                 '''),
                 "PEP 517 and 518 moved packaging toward tool-neutral build metadata instead of ad hoc setup scripts alone.",
             ),
-            ex(
+            make_example(
                 "Editable installs keep source and import path connected",
                 "`pip install -e .` lets imports reflect your current working tree without rebuilding the package after every change.",
-                b('''
-                print("python -m venv .venv")
-                print(".venv\\Scripts\\activate")
-                print("pip install -e .")
+                strip_margin('''
+                import sys
+
+                # Show evidence that venv changes where Python finds packages.
+                print("sys.prefix:     ", sys.prefix)
+                print("sys.base_prefix:", sys.base_prefix)
+                in_venv = sys.prefix != sys.base_prefix
+                print("Inside a virtual environment:", in_venv)
+
+                # Site-packages path shows where installed packages land.
+                site_pkgs = [p for p in sys.path if "site-packages" in p]
+                print("site-packages:", site_pkgs[:1] or ["(none active)"])
+                print()
+                print("Shell recipe (run outside Python):")
+                print("  python -m venv .venv && source .venv/bin/activate")
+                print("  pip install -e .   # editable: source tree IS the package")
                 '''),
                 "Editable installs are ideal during active development because your import target points at the source tree itself.",
             ),
@@ -2597,7 +2690,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY42",
         9,
         "File Handling",
@@ -2611,10 +2704,10 @@ concepts.extend([
         "Programs need durable storage, but operating systems expose files as byte streams. Python adds text decoding, buffering, and safe cleanup on top.",
         "open file -> file object -> text decode/encode or raw bytes -> close on exit",
         [
-            ex(
+            make_example(
                 "Write and read text with an explicit encoding",
                 "Encoding bugs often come from relying on platform defaults instead of declaring the file format.",
-                b('''
+                strip_margin('''
                 from pathlib import Path
 
                 path = Path("note.txt")
@@ -2623,10 +2716,10 @@ concepts.extend([
                 '''),
                 "Explicit UTF-8 makes the file portable across machines with different default encodings.",
             ),
-            ex(
+            make_example(
                 "Demonstrate an encoding mismatch",
                 "A file written in one encoding may fail when read as another.",
-                b('''
+                strip_margin('''
                 from pathlib import Path
 
                 path = Path("legacy.txt")
@@ -2638,10 +2731,10 @@ concepts.extend([
                 '''),
                 "This is the kind of bug that appears when a Windows-produced file meets a Linux UTF-8 assumption without an explicit encoding contract.",
             ),
-            ex(
+            make_example(
                 "Binary mode with `struct`",
                 "Binary I/O is for exact byte layouts rather than decoded text.",
-                b('''
+                strip_margin('''
                 import struct
 
                 payload = struct.pack("<if", 7, 3.5)
@@ -2653,7 +2746,7 @@ concepts.extend([
         ],
         "Use text mode for human-readable files and binary mode for precise byte-level formats. Mixing the two mental models causes subtle corruption bugs.",
     ),
-    c(
+    make_concept(
         "PY43",
         9,
         "JSON, CSV, pickle",
@@ -2667,10 +2760,10 @@ concepts.extend([
         "Programs exchange data with humans, spreadsheets, APIs, caches, and queues. One representation never fits every audience, so Python offers multiple serialization tools.",
         "Python objects -> serialized representation -> transport or storage -> deserialize later",
         [
-            ex(
+            make_example(
                 "JSON with a custom datetime encoder",
                 "JSON supports a small set of built-in types, so richer objects need explicit conversion.",
-                b('''
+                strip_margin('''
                 import datetime as dt
                 import json
 
@@ -2684,10 +2777,10 @@ concepts.extend([
                 '''),
                 "A custom encoder converts unsupported objects into JSON-friendly values before serialization.",
             ),
-            ex(
+            make_example(
                 "CSV with `DictReader`",
                 "CSV is simple and spreadsheet-friendly, but every field starts as text until you convert it.",
-                b('''
+                strip_margin('''
                 import csv
                 import io
 
@@ -2697,10 +2790,10 @@ concepts.extend([
                 '''),
                 "`DictReader` maps column names to string values, which is friendlier than indexing raw split lines by position.",
             ),
-            ex(
+            make_example(
                 "Pickle is powerful and unsafe for untrusted input",
                 "Pickle can reconstruct arbitrary Python objects, which is exactly why it must not be used with data you do not trust.",
-                b('''
+                strip_margin('''
                 import pickle
 
                 payload = pickle.dumps({"safe": [1, 2, 3]})
@@ -2712,7 +2805,7 @@ concepts.extend([
         ],
         "Choose the format that matches the audience: JSON for interoperable APIs, CSV for table-shaped text, and pickle only for trusted Python-to-Python persistence.",
     ),
-    c(
+    make_concept(
         "PY44",
         9,
         "pathlib vs os.path",
@@ -2726,10 +2819,10 @@ concepts.extend([
         "Path handling is everywhere, and string concatenation is a brittle way to express filesystem intent across operating systems.",
         "Path object -> joins, queries, and traversal methods -> file operations",
         [
-            ex(
+            make_example(
                 "Path arithmetic is clearer than manual joining",
                 "The `/` operator on `Path` objects means 'descend into this path component', not numeric division.",
-                b('''
+                strip_margin('''
                 from pathlib import Path
 
                 path = Path("data") / "reports" / "summary.txt"
@@ -2737,10 +2830,10 @@ concepts.extend([
                 '''),
                 "This reads like the directory structure instead of a pile of string concatenations and separators.",
             ),
-            ex(
+            make_example(
                 "Common checks are methods on the path object",
                 "`pathlib` keeps the path and the operations that make sense on it close together.",
-                b('''
+                strip_margin('''
                 from pathlib import Path
 
                 path = Path(".")
@@ -2749,10 +2842,10 @@ concepts.extend([
                 '''),
                 "Method-based APIs reduce the need to remember which `os.path` function pairs with which string you have in hand.",
             ),
-            ex(
+            make_example(
                 "Directory traversal methods",
                 "`iterdir`, `glob`, and `rglob` cover the most common directory-search cases.",
-                b('''
+                strip_margin('''
                 from pathlib import Path
 
                 root = Path(".")
@@ -2767,7 +2860,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY45",
         10,
         "Concurrency vs Parallelism vs Asynchrony",
@@ -2781,40 +2874,97 @@ concepts.extend([
         "These distinctions matter because using the wrong concurrency model can make code slower, harder to debug, or both.",
         "I/O wait -> threads or async can overlap\nCPU work -> parallel processes or native extensions help more",
         [
-            ex(
+            make_example(
                 "A mental decision table",
                 "The first question is always what your program spends time waiting on.",
-                b('''
-                print("CPU-bound -> multiprocessing or native code")
-                print("I/O-bound with blocking APIs -> threading")
-                print("I/O-bound with async APIs -> asyncio")
+                strip_margin('''
+                import time, threading
+
+                def io_task():
+                    time.sleep(0.1)   # simulates network wait
+
+                # Sequential: two tasks take ~0.2 s
+                t0 = time.perf_counter()
+                io_task(); io_task()
+                seq = time.perf_counter() - t0
+
+                # Concurrent (threaded): two tasks take ~0.1 s because sleep releases GIL
+                t0 = time.perf_counter()
+                threads = [threading.Thread(target=io_task) for _ in range(2)]
+                [t.start() for t in threads]; [t.join() for t in threads]
+                conc = time.perf_counter() - t0
+
+                print(f"Sequential : {seq:.2f}s")
+                print(f"Concurrent : {conc:.2f}s  <- threads help for I/O waits")
+                print("CPU-bound -> multiprocessing | I/O blocking -> threading | I/O async -> asyncio")
                 '''),
                 "If the work is mostly waiting on sockets or disks, overlap helps. If the work burns CPU, the GIL becomes part of the discussion.",
             ),
-            ex(
+            make_example(
                 "Concurrency can overlap waiting even on one core",
                 "Tasks do not need to run literally at the same instant to make better use of elapsed time.",
-                b('''
-                print("task A: wait on network")
-                print("task B: run while A waits")
-                print("That overlap is concurrency")
+                strip_margin('''
+                import time, threading
+
+                log = []
+
+                def task(name, delay):
+                    log.append(f"{name} start")
+                    time.sleep(delay)
+                    log.append(f"{name} done")
+
+                # Sequential: B must wait for A to finish
+                log.clear()
+                t0 = time.perf_counter()
+                task("A", 0.05); task("B", 0.05)
+                print("Sequential:", log, f"{time.perf_counter()-t0:.2f}s")
+
+                # Concurrent: both run at the same elapsed time
+                log.clear()
+                t0 = time.perf_counter()
+                ta = threading.Thread(target=task, args=("A", 0.05))
+                tb = threading.Thread(target=task, args=("B", 0.05))
+                ta.start(); tb.start(); ta.join(); tb.join()
+                print("Concurrent:", log, f"{time.perf_counter()-t0:.2f}s")
                 '''),
                 "Concurrency is about progress on multiple tasks, not necessarily simultaneous CPU execution.",
             ),
-            ex(
+            make_example(
                 "Parallelism needs separate workers",
                 "True CPU parallelism usually means separate OS processes in pure Python code.",
-                b('''
-                print("process 1 on core 1")
-                print("process 2 on core 2")
-                print("same moment, separate memory")
+                strip_margin('''
+                import time, concurrent.futures
+
+                def cpu_work(n):
+                    # Purely CPU-bound: count to n
+                    total = 0
+                    for i in range(n):
+                        total += i * i
+                    return total
+
+                N = 500_000
+
+                # Single process: one core does everything sequentially
+                t0 = time.perf_counter()
+                cpu_work(N); cpu_work(N)
+                seq = time.perf_counter() - t0
+
+                # ProcessPoolExecutor: each worker gets its own interpreter -> true parallelism
+                t0 = time.perf_counter()
+                with concurrent.futures.ProcessPoolExecutor(max_workers=2) as ex:
+                    list(ex.map(cpu_work, [N, N]))
+                par = time.perf_counter() - t0
+
+                print(f"Sequential : {seq:.3f}s")
+                print(f"Parallel   : {par:.3f}s  <- faster on multi-core for CPU work")
+                print("GIL prevents thread-level CPU parallelism; processes bypass it")
                 '''),
                 "Separate processes avoid the single-CPython-interpreter-thread bottleneck for CPU-bound pure-Python code.",
             ),
         ],
         "Do not pick a concurrency tool because it sounds advanced. Start with the workload shape, then choose the minimum model that matches it.",
     ),
-    c(
+    make_concept(
         "PY46",
         10,
         "Threading",
@@ -2828,10 +2978,10 @@ concepts.extend([
         "Threads exist because overlapping waiting is valuable, and many operating-system or C-extension operations release the GIL while work is in progress.",
         "one process -> multiple threads share memory -> GIL coordinates bytecode execution -> synchronization still needed for shared state",
         [
-            ex(
+            make_example(
                 "Threads still help with waiting",
                 "The GIL does not stop overlap on blocking I/O because threads can switch while one is waiting.",
-                b('''
+                strip_margin('''
                 import threading
                 import time
 
@@ -2845,10 +2995,10 @@ concepts.extend([
                 '''),
                 "The sleeps overlap, so total elapsed time is closer to one sleep than to three added together.",
             ),
-            ex(
+            make_example(
                 "A race condition on shared state",
                 "Shared mutable state is the danger zone for threads.",
-                b('''
+                strip_margin('''
                 import threading
 
                 counter = 0
@@ -2859,10 +3009,10 @@ concepts.extend([
                 '''),
                 "The example shows the fix shape: protect the critical section with a lock. Without synchronization, repeated updates can interleave unpredictably.",
             ),
-            ex(
+            make_example(
                 "Other coordination primitives",
                 "Threads need more than one tool depending on the coordination pattern.",
-                b('''
+                strip_margin('''
                 import threading
                 print(threading.RLock)
                 print(threading.Semaphore)
@@ -2874,7 +3024,7 @@ concepts.extend([
         ],
         "Threads are often the simplest fix for I/O overlap, but once shared-state complexity dominates, a queue-based or process-based design may be easier to reason about.",
     ),
-    c(
+    make_concept(
         "PY47",
         10,
         "Multiprocessing",
@@ -2888,10 +3038,10 @@ concepts.extend([
         "Separate processes matter because CPU-bound Python work often needs more than concurrency; it needs multiple interpreters running at once.",
         "parent process -> worker processes -> tasks serialized to workers -> results serialized back",
         [
-            ex(
+            make_example(
                 "A process pool maps work across inputs",
                 "Pools are the high-level entry point for many CPU-bound batch jobs.",
-                b('''
+                strip_margin('''
                 from multiprocessing import Pool
 
                 def square(n):
@@ -2903,22 +3053,38 @@ concepts.extend([
                 '''),
                 "The guard is required on some platforms because worker processes import the module to start.",
             ),
-            ex(
+            make_example(
                 "Queue versus pipe",
                 "Both move data between processes, but they serve slightly different communication shapes.",
-                b('''
+                strip_margin('''
                 from multiprocessing import Pipe, Queue
                 print(Queue)
                 print(Pipe)
                 '''),
                 "Use queues for general producer-consumer patterns and pipes for simpler two-endpoint communication.",
             ),
-            ex(
+            make_example(
                 "Arguments must usually be picklable",
                 "Worker processes need a serialized form of the task and its data.",
-                b('''
-                print("top-level functions are safer than lambdas for multiprocessing tasks")
-                print("avoid sending open file handles or non-picklable objects")
+                strip_margin('''
+                import pickle
+
+                # Top-level functions pickle fine
+                import math
+                data = pickle.dumps(math.sqrt)
+                print("top-level function pickles:", len(data), "bytes")
+
+                # Lambda cannot be pickled
+                try:
+                    pickle.dumps(lambda x: x)
+                except AttributeError as exc:
+                    print("lambda fails pickle:", exc)
+
+                # Plain data pickles fine
+                payload = pickle.dumps({"task": "square", "values": [1, 2, 3]})
+                restored = pickle.loads(payload)
+                print("dict round-trip:", restored)
+                print("Use top-level functions and plain data as multiprocessing arguments")
                 '''),
                 "If the work item cannot be pickled, the child process cannot reconstruct it. That is a common source of multiprocessing errors.",
             ),
@@ -2928,7 +3094,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY48",
         10,
         "asyncio",
@@ -2942,10 +3108,10 @@ concepts.extend([
         "Async I/O exists because one thread can often manage many waiting network tasks efficiently if code cooperates instead of blocking.",
         "event loop -> ready task queue + I/O readiness notifications -> resume suspended coroutines",
         [
-            ex(
+            make_example(
                 "Basic coroutine execution",
                 "`async def` defines a coroutine function, and `asyncio.run` creates and drives the event loop for a top-level entry point.",
-                b('''
+                strip_margin('''
                 import asyncio
 
                 async def greet():
@@ -2956,10 +3122,10 @@ concepts.extend([
                 '''),
                 "The `await` gives control back to the loop while the sleep is pending.",
             ),
-            ex(
+            make_example(
                 "Run several coroutines together",
                 "`gather` waits for a group of awaitables and returns their results in input order.",
-                b('''
+                strip_margin('''
                 import asyncio
 
                 async def fetch(name):
@@ -2973,10 +3139,10 @@ concepts.extend([
                 '''),
                 "`TaskGroup` in Python 3.11+ offers stronger structured-concurrency semantics for related tasks.",
             ),
-            ex(
+            make_example(
                 "Do not block the event loop",
                 "A blocking call freezes every coroutine sharing the loop until it finishes.",
-                b('''
+                strip_margin('''
                 import asyncio
                 import time
 
@@ -2991,7 +3157,7 @@ concepts.extend([
         ],
         "Async code is not automatically faster. It shines when many tasks spend time waiting on network or other async-compatible I/O.",
     ),
-    c(
+    make_concept(
         "PY49",
         11,
         "Type Hints",
@@ -3005,10 +3171,10 @@ concepts.extend([
         "Large codebases need machine-checkable documentation about data flow. Type hints provide that without giving up Python's dynamic runtime.",
         "annotation syntax -> metadata attached to function or variable -> static tool reads it later",
         [
-            ex(
+            make_example(
                 "Basic function and variable annotations",
                 "Annotations make intent explicit at the API boundary.",
-                b('''
+                strip_margin('''
                 from typing import Optional
 
                 user_id: int = 7
@@ -3022,10 +3188,10 @@ concepts.extend([
                 '''),
                 "`Optional[str]` means the function may return `str` or `None`.",
             ),
-            ex(
+            make_example(
                 "Generics with `TypeVar`",
                 "Generic code can stay precise without hard-coding one concrete type.",
-                b('''
+                strip_margin('''
                 from typing import TypeVar
 
                 T = TypeVar("T")
@@ -3038,10 +3204,10 @@ concepts.extend([
                 '''),
                 "The type variable says the return type matches the element type of the input list.",
             ),
-            ex(
+            make_example(
                 "Advanced hints for decorators and value restrictions",
                 "`Literal`, `Annotated`, and `ParamSpec` cover narrower but important cases.",
-                b('''
+                strip_margin('''
                 from typing import Annotated, Literal
 
                 Mode = Literal["r", "w"]
@@ -3055,7 +3221,7 @@ concepts.extend([
         ],
         "Hints should clarify APIs, not drown them in ceremony. Type every detail only when the extra precision actually helps readers or tools catch mistakes.",
     ),
-    c(
+    make_concept(
         "PY50",
         11,
         "Static Analysis",
@@ -3069,10 +3235,10 @@ concepts.extend([
         "Static analysis matters because some bugs are easier and cheaper to catch from source code shape than from production failures.",
         "source + annotations -> analyzer builds model -> reports mismatches before runtime",
         [
-            ex(
+            make_example(
                 "Annotations are metadata, not runtime enforcement",
                 "Python will happily run code with the wrong value type unless you add your own checks or external validation.",
-                b('''
+                strip_margin('''
                 def add_one(value: int) -> int:
                     return value + 1
 
@@ -3080,10 +3246,10 @@ concepts.extend([
                 '''),
                 "The code still runs until the unsupported operation triggers a runtime error. The annotation alone did not stop the call.",
             ),
-            ex(
+            make_example(
                 "A mypy configuration sketch",
                 "Static analysis becomes more useful when the tool settings are explicit and repeatable.",
-                b('''
+                strip_margin('''
                 config = """
                 [mypy]
                 python_version = 3.12
@@ -3094,10 +3260,10 @@ concepts.extend([
                 '''),
                 "Treat the configuration as part of the project contract, just like linting or test settings.",
             ),
-            ex(
+            make_example(
                 "A hint can reveal a real bug",
                 "The analyzer sees that a `None` branch was not handled even if your test path did not hit it yet.",
-                b('''
+                strip_margin('''
                 from typing import Optional
 
                 def shout(name: Optional[str]) -> str:
@@ -3117,7 +3283,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY51",
         12,
         "unittest",
@@ -3131,10 +3297,10 @@ concepts.extend([
         "Tests exist so code changes can be checked automatically. `unittest` provides a standard structure that ships with Python itself.",
         "test runner -> discovers TestCase methods -> runs fixtures -> executes assertions -> reports failures",
         [
-            ex(
+            make_example(
                 "A `BankAccount` test case",
                 "This continues the class example from the OOP layer and shows the basic xUnit structure.",
-                b('''
+                strip_margin('''
                 import unittest
 
                 class BankAccount:
@@ -3157,10 +3323,10 @@ concepts.extend([
                 '''),
                 "`setUp` runs before each test method, giving each test a fresh fixture.",
             ),
-            ex(
+            make_example(
                 "Class-level fixtures",
                 "Use these when setup is expensive and can safely be shared by all tests in the class.",
-                b('''
+                strip_margin('''
                 class DemoTests(unittest.TestCase):
                     @classmethod
                     def setUpClass(cls):
@@ -3171,10 +3337,10 @@ concepts.extend([
                 '''),
                 "Be careful with shared mutable state in class fixtures because tests can accidentally affect each other.",
             ),
-            ex(
+            make_example(
                 "Assertion helpers communicate the check",
                 "Framework-specific assertion methods produce better failure messages than hand-written if-statements.",
-                b('''
+                strip_margin('''
                 self.assertEqual(2 + 2, 4)
                 self.assertTrue(True)
                 self.assertRaises(ValueError)
@@ -3184,7 +3350,7 @@ concepts.extend([
         ],
         "`unittest` is reliable and standard, but many teams prefer pytest because it removes more boilerplate while staying compatible with much of the same ecosystem.",
     ),
-    c(
+    make_concept(
         "PY52",
         12,
         "pytest",
@@ -3198,10 +3364,10 @@ concepts.extend([
         "pytest exists because test code should be easy to write and easy to read. It removes ceremony so the test intent stays front and center.",
         "pytest discovers test functions -> injects fixtures by name -> rewrites asserts for rich failure output",
         [
-            ex(
+            make_example(
                 "The same style without a test class",
                 "Plain functions are often enough, which makes tests feel closer to normal Python code.",
-                b('''
+                strip_margin('''
                 def deposit(balance, amount):
                     return balance + amount
 
@@ -3213,10 +3379,10 @@ concepts.extend([
                 '''),
                 "pytest rewrites `assert` to show rich comparison output on failure, so plain asserts become pleasant to use.",
             ),
-            ex(
+            make_example(
                 "A fixture and parametrized test",
                 "Fixtures centralize setup and parametrization multiplies cases cleanly.",
-                b('''
+                strip_margin('''
                 import pytest
 
                 @pytest.fixture
@@ -3233,10 +3399,10 @@ concepts.extend([
                 '''),
                 "This pattern scales far better than hand-copying almost identical tests.",
             ),
-            ex(
+            make_example(
                 "`conftest.py` and monkeypatch",
                 "Shared fixtures live in `conftest.py`, and `monkeypatch` lets tests temporarily replace behavior safely.",
-                b('''
+                strip_margin('''
                 import os
                 import pytest
 
@@ -3254,7 +3420,7 @@ concepts.extend([
         ],
         "pytest is usually the better default for new projects, but `unittest` knowledge still matters because the stdlib and older codebases use it heavily.",
     ),
-    c(
+    make_concept(
         "PY53",
         12,
         "Mocking",
@@ -3268,10 +3434,10 @@ concepts.extend([
         "Mocks exist because real networks, clocks, payment gateways, and file systems make tests slow, flaky, or expensive when the unit under test does not need the real dependency.",
         "unit under test -> mocked dependency returns controlled values -> assertions check calls and behavior",
         [
-            ex(
+            make_example(
                 "A basic mock object",
                 "Mocks record calls and return configured values.",
-                b('''
+                strip_margin('''
                 from unittest.mock import Mock
 
                 client = Mock()
@@ -3281,10 +3447,10 @@ concepts.extend([
                 '''),
                 "You can assert both what was returned and how the mock was used.",
             ),
-            ex(
+            make_example(
                 "`patch` as a context manager",
                 "Patch where the code under test looks up the name, not where the original object was defined.",
-                b('''
+                strip_margin('''
                 from unittest.mock import patch
 
                 with patch("module_under_test.requests.get") as fake_get:
@@ -3292,12 +3458,26 @@ concepts.extend([
                 '''),
                 "Location matters because imports copy names into module namespaces.",
             ),
-            ex(
+            make_example(
                 "The over-mocking trap",
                 "If every collaborator is mocked, you may stop testing anything real about the system.",
-                b('''
-                print("Mock HTTP clients, not your own pure functions")
-                print("Prefer integration tests for boundaries that matter")
+                strip_margin('''
+                from unittest.mock import Mock
+
+                # This test passes but proves nothing useful:
+                # every collaborator is mocked, so we are testing the mock's behaviour.
+                service = Mock()
+                service.calculate.return_value = 42
+                result = service.calculate(10, 20)
+                assert result == 42   # trivially true - we set it ourselves
+
+                # Better: keep pure business logic real and only mock I/O boundaries.
+                def calculate(a, b):
+                    return a + b       # real logic - no mock needed
+
+                assert calculate(10, 20) == 30
+                print("Pure logic test: real code, real assertion")
+                print("Mock the HTTP client, the DB driver - not your own math")
                 '''),
                 "A test full of mocks can pass while the real pieces fail to fit together. Balance unit isolation with integration coverage.",
             ),
@@ -3307,7 +3487,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY54",
         13,
         "Profiling",
@@ -3321,10 +3501,10 @@ concepts.extend([
         "Performance work without measurement is mostly storytelling. Profilers turn vague suspicions into concrete hotspots.",
         "program run -> profiler records timing or memory -> report identifies hotspots",
         [
-            ex(
+            make_example(
                 "`cProfile` a slow function",
                 "Function-level profiling is the first pass for many problems.",
-                b('''
+                strip_margin('''
                 import cProfile
 
                 def slow():
@@ -3337,26 +3517,46 @@ concepts.extend([
                 '''),
                 "The report shows how many times each function was called and where cumulative time accumulated.",
             ),
-            ex(
+            make_example(
                 "Line profilers zoom in further",
                 "Once you know the slow function, line-level tools help find the expensive statement inside it.",
-                b('''
-                print("Use line_profiler's @profile decorator when function-level timing is not precise enough")
-                '''),
+                strip_margin('''
+                import timeit
+
+                # Simulate line-level comparison by timing two candidate implementations.
+                # (line_profiler is a third-party tool; timeit is the stdlib equivalent
+                #  for comparing individual expressions.)
+
+                stmt_concat = '''),
                 "This is useful when one function contains both cheap and expensive branches.",
             ),
-            ex(
+            make_example(
                 "Memory deserves separate attention",
                 "CPU-fast code can still be memory-hungry.",
-                b('''
-                print("memory_profiler can reveal the line where a huge list or dataframe is allocated")
+                strip_margin('''
+                import tracemalloc
+
+                tracemalloc.start()
+
+                # Allocate a large list to create a measurable footprint.
+                snapshot_before = tracemalloc.take_snapshot()
+                big_list = list(range(100_000))
+                snapshot_after = tracemalloc.take_snapshot()
+
+                stats = snapshot_after.compare_to(snapshot_before, "lineno")
+                for stat in stats[:3]:
+                    print(stat)
+
+                del big_list
+                tracemalloc.stop()
+                print("tracemalloc is the stdlib memory profiler; memory_profiler is a popular third-party alternative")
                 '''),
                 "Optimize the bottleneck you actually have: time, memory, or both.",
             ),
         ],
         "Profile before optimizing and again after optimizing. Without the second measurement, you do not know whether the change actually helped.",
     ),
-    c(
+    make_concept(
         "PY55",
         13,
         "Python Memory Model Deep-Dive",
@@ -3370,30 +3570,30 @@ concepts.extend([
         "Memory behavior leaks into performance and even semantics, especially around identity, caching, and object lifetime.",
         "object allocation -> references increase/decrease -> refcount hits zero or cycle collector cleans unreachable graph",
         [
-            ex(
+            make_example(
                 "Small integers are often cached",
                 "This is why identity experiments with tiny integers can be misleading.",
-                b('''
+                strip_margin('''
                 a = 256
                 b = 256
                 print(a is b)
                 '''),
                 "CPython commonly interns integers from -5 to 256. That is an implementation optimization, not a value-equality rule.",
             ),
-            ex(
+            make_example(
                 "Some strings are interned too",
                 "Short identifier-like strings are frequent candidates for interning.",
-                b('''
+                strip_margin('''
                 x = "hello"
                 y = "hello"
                 print(x is y)
                 '''),
                 "This may print `True`, but you should still compare strings with `==` because interning is not the semantic rule.",
             ),
-            ex(
+            make_example(
                 "`__slots__` removes per-instance dictionaries",
                 "When you create huge numbers of simple objects, layout choices matter.",
-                b('''
+                strip_margin('''
                 class Plain:
                     def __init__(self):
                         self.x = 1
@@ -3413,7 +3613,7 @@ concepts.extend([
         ],
         "Do not write correctness logic around caching or interning. Those are optimizations. Treat them as implementation details unless you are measuring performance.",
     ),
-    c(
+    make_concept(
         "PY56",
         13,
         "Writing Faster Python",
@@ -3427,29 +3627,75 @@ concepts.extend([
         "Most performance wins come from changing the shape of the work, not shaving nanoseconds off the wrong loop.",
         "problem shape -> algorithm choice -> data structure choice -> only then small runtime tweaks",
         [
-            ex(
+            make_example(
                 "Algorithmic wins dominate",
                 "Changing complexity beats micro-tuning nearly every time.",
-                b('''
-                print("Prefer O(n log n) sorting over repeated O(n) scans inside an O(n) loop")
+                strip_margin('''
+                import time
+
+                data = list(range(2000, 0, -1))   # 2000 unsorted integers
+
+                # O(n^2): for each element, scan all targets linearly
+                def has_pair_n2(lst, target):
+                    for i in lst:
+                        for j in lst:
+                            if i + j == target:
+                                return True
+                    return False
+
+                # O(n log n): sort once then use a set for O(1) lookups
+                def has_pair_nlogn(lst, target):
+                    seen = set(lst)
+                    return any(target - x in seen for x in lst)
+
+                t0 = time.perf_counter()
+                has_pair_n2(data, 9999)
+                t_n2 = time.perf_counter() - t0
+
+                t0 = time.perf_counter()
+                has_pair_nlogn(data, 9999)
+                t_nlogn = time.perf_counter() - t0
+
+                print(f"O(n^2) :     {t_n2:.4f}s")
+                print(f"O(n log n):  {t_nlogn:.6f}s")
+                print(f"Speedup: {t_n2/t_nlogn:.0f}x  — algorithm beats micro-tuning every time")
                 '''),
                 "If the algorithm is wrong, local tweaks only make the wrong approach fail slightly faster.",
             ),
-            ex(
+            make_example(
                 "Local lookup is usually faster than global lookup",
                 "Python resolves local names more cheaply than globals.",
-                b('''
+                strip_margin('''
                 import timeit
                 setup = "x = 1\\n"
                 print(timeit.timeit("x + 1", setup=setup, number=1_000_000))
                 '''),
                 "This difference exists, but it matters far less than choosing the right algorithm and data structure.",
             ),
-            ex(
+            make_example(
                 "Vectorized libraries can change the game",
                 "For heavy numeric work, pushing loops into optimized native code often dwarfs pure-Python tweaks.",
-                b('''
-                print("For array math, NumPy can be orders of magnitude faster than Python loops")
+                strip_margin('''
+                import time, array, math
+
+                N = 100_000
+                data = list(range(N))
+
+                # Python loop: each element is a full Python object
+                t0 = time.perf_counter()
+                result_loop = [x * x for x in data]
+                t_loop = time.perf_counter() - t0
+
+                # array module: contiguous C doubles, but still iterated from Python
+                arr = array.array('d', data)
+                t0 = time.perf_counter()
+                result_arr = array.array('d', (x * x for x in arr))
+                t_arr = time.perf_counter() - t0
+
+                print(f"List comprehension : {t_loop:.4f}s")
+                print(f"array iteration    : {t_arr:.4f}s")
+                print("For heavier numeric work, NumPy pushes the loop into C,")
+                print("giving another 10-100x improvement over pure Python iteration.")
                 '''),
                 "The best optimization is often moving the hot path to a library designed for that workload.",
             ),
@@ -3459,7 +3705,7 @@ concepts.extend([
 ])
 
 concepts.extend([
-    c(
+    make_concept(
         "PY57",
         14,
         "Common Design Patterns in Python",
@@ -3473,19 +3719,19 @@ concepts.extend([
         "Patterns matter because recurring design problems deserve shared vocabulary, but Python often solves them with fewer moving parts than more ceremony-heavy languages.",
         "problem pattern -> choose lightest Python construct that preserves intent",
         [
-            ex(
+            make_example(
                 "Singleton via module state",
                 "In Python, a module is already a natural singleton because imports cache one module object.",
-                b('''
+                strip_margin('''
                 settings = {"mode": "prod"}
                 print(settings)
                 '''),
                 "You often do not need a class-based singleton at all. A module-level object is simpler and clearer.",
             ),
-            ex(
+            make_example(
                 "Factory maps names to classes",
                 "A dictionary can be the whole factory when the decision is straightforward.",
-                b('''
+                strip_margin('''
                 class JsonExporter: pass
                 class CsvExporter: pass
 
@@ -3494,10 +3740,10 @@ concepts.extend([
                 '''),
                 "This is more Pythonic than a long switch-like object hierarchy for many simple cases.",
             ),
-            ex(
+            make_example(
                 "Strategy via functions",
                 "A strategy can just be a callable passed in from the outside.",
-                b('''
+                strip_margin('''
                 def discount_10(price):
                     return price * 0.9
 
@@ -3511,7 +3757,7 @@ concepts.extend([
         ],
         "Use patterns to clarify design, not to impress yourself. If a plain function or dict solves the problem cleanly, that is the better pattern for Python.",
     ),
-    c(
+    make_concept(
         "PY58",
         14,
         "Python Standard Library Tour",
@@ -3525,20 +3771,20 @@ concepts.extend([
         "Python's batteries-included philosophy matters because many tasks are already solved well enough without reaching for another dependency first.",
         "core language + standard library modules -> practical toolbox for everyday work",
         [
-            ex(
+            make_example(
                 "A tiny `itertools` sampler",
                 "These tools are great for iterator-heavy code.",
-                b('''
+                strip_margin('''
                 from itertools import chain, combinations
                 print(list(chain([1, 2], [3])))
                 print(list(combinations([1, 2, 3], 2)))
                 '''),
                 "`itertools` turns many nested-loop and windowing tasks into small, composable expressions.",
             ),
-            ex(
+            make_example(
                 "`functools` and `enum` in everyday code",
                 "These modules often remove repetitive boilerplate.",
-                b('''
+                strip_margin('''
                 from enum import Enum, auto
                 from functools import cache
 
@@ -3553,10 +3799,10 @@ concepts.extend([
                 '''),
                 "`Enum` gives named constants and `cache` memoizes pure function calls with no size limit.",
             ),
-            ex(
+            make_example(
                 "`contextlib` utilities",
                 "The library includes helpers for temporary output redirection and controlled exception suppression.",
-                b('''
+                strip_margin('''
                 from contextlib import suppress
 
                 with suppress(FileNotFoundError):
@@ -3568,7 +3814,7 @@ concepts.extend([
         ],
         "Before adding a dependency, check whether the standard library already solves the problem well enough. It often does.",
     ),
-    c(
+    make_concept(
         "PY59",
         14,
         "Python Anti-Patterns",
@@ -3582,10 +3828,10 @@ concepts.extend([
         "Anti-patterns matter because avoiding a few traps saves disproportionate amounts of debugging time.",
         "tempting shortcut -> hidden semantic mismatch -> confusing bug later",
         [
-            ex(
+            make_example(
                 "Mutable defaults keep state between calls",
                 "This is one of Python's most common accidental bugs.",
-                b('''
+                strip_margin('''
                 def add(item, bucket=[]):
                     bucket.append(item)
                     return bucket
@@ -3595,10 +3841,10 @@ concepts.extend([
                 '''),
                 "The second call reuses the same list. Use `None` plus in-function initialization instead.",
             ),
-            ex(
+            make_example(
                 "Bare `except` catches too much",
                 "It can swallow `KeyboardInterrupt` and `SystemExit`, making programs harder to stop and debug.",
-                b('''
+                strip_margin('''
                 try:
                     raise KeyboardInterrupt
                 except:
@@ -3606,10 +3852,10 @@ concepts.extend([
                 '''),
                 "Catch the narrow exception you expect instead of erasing every possible signal.",
             ),
-            ex(
+            make_example(
                 "Ask the right question: identity versus type hierarchy",
                 "`is None` and `isinstance` express intent better than lookalikes.",
-                b('''
+                strip_margin('''
                 print(None is None)
                 print(type(True) == int)
                 print(isinstance(True, int))
@@ -3822,6 +4068,89 @@ def render_python_pre(code: str, label: str = "python") -> str:
     return f"<pre data-lang='{escape(label)}'{class_attr}><code class='language-python'>{body}</code></pre>"
 
 
+OUTPUT_BLOCK_RE = re.compile(
+    r'\s*<div class="output-block">\s*<div class="output-label">Output</div>\s*'
+    r'<pre class="output-pre"><code class="output-code">(.*?)</code></pre>\s*</div>',
+    re.DOTALL,
+)
+
+
+@lru_cache(maxsize=1)
+def existing_output_source() -> str:
+    if not OUTFILE.exists():
+        return ""
+    return OUTFILE.read_text(encoding="utf-8")
+
+
+def render_output_block(output: str) -> str:
+    return """
+              <div class="output-block">
+                <div class="output-label">Output</div>
+                <pre class="output-pre"><code class="output-code">{output}</code></pre>
+              </div>
+            """.format(output=escape(output))
+
+
+def execute_code_block(code: str) -> str:
+    wrapped = (
+        "import warnings\n"
+        "warnings.simplefilter('ignore')\n"
+        f"code = {code!r}\n"
+        "scope = {'__name__': '__main__'}\n"
+        "try:\n"
+        "    exec(compile(code, '<snippet>', 'exec'), scope, scope)\n"
+        "except BaseException as exc:\n"
+        "    print(f'{type(exc).__name__}: {exc}')\n"
+    )
+    SNIPPET_TMPDIR.mkdir(exist_ok=True)
+    run_dir = SNIPPET_TMPDIR / hashlib.sha1(code.encode("utf-8")).hexdigest()[:12]
+    run_dir.mkdir(exist_ok=True)
+    script_path = run_dir / "snippet.py"
+    script_path.write_text(wrapped, encoding="utf-8")
+    env = dict(os.environ)
+    env["PYTHONIOENCODING"] = "utf-8"
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(script_path)],
+            cwd=run_dir,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
+            env=env,
+        )
+    except subprocess.TimeoutExpired:
+        return "TimeoutExpired: example took too long to run"
+    finally:
+        shutil.rmtree(run_dir, ignore_errors=True)
+        try:
+            SNIPPET_TMPDIR.rmdir()
+        except OSError:
+            pass
+    stdout = completed.stdout.replace("\r\n", "\n")
+    stderr = completed.stderr.replace("\r\n", "\n")
+    combined = stdout
+    if stderr:
+        combined = f"{stdout}{stderr}" if stdout else stderr
+    if completed.returncode and not combined.strip():
+        combined = f"Process exited with code {completed.returncode}"
+    return combined.rstrip("\n")
+
+
+@lru_cache(maxsize=None)
+def output_for_code(code: str) -> str:
+    pre_html = render_python_pre(code)
+    existing_html = existing_output_source()
+    if existing_html:
+        index = existing_html.find(pre_html)
+        if index != -1:
+            match = OUTPUT_BLOCK_RE.match(existing_html, index + len(pre_html))
+            if match:
+                return unescape(match.group(1))
+    return execute_code_block(code)
+
+
 def render_examples(examples: list[dict[str, str]]) -> str:
     parts = []
     for index, item in enumerate(examples, 1):
@@ -3831,13 +4160,15 @@ def render_examples(examples: list[dict[str, str]]) -> str:
               <h4>Example {index}. {title}</h4>
               <p><strong>What this does and why:</strong> {why}</p>
               {code}
-              <p><strong>What you should observe / what would happen if you changed X:</strong> {observe}</p>
+              {output}
+              <p><strong>What to observe:</strong> {observe}</p>
             </article>
             """.format(
                 index=index,
                 title=escape(item["title"]),
                 why=escape(item["why"]),
                 code=render_python_pre(item["code"]),
+                output=render_output_block(output_for_code(item["code"])),
                 observe=escape(item["observe"]),
             )
         )
@@ -3853,11 +4184,13 @@ def render_misconceptions(items: list[dict[str, str]]) -> str:
               <div class='callout-title'>Misconception</div>
               <p><strong>Wrong assumption:</strong> {wrong}</p>
               {code}
+              {output}
               <p><strong>Correction:</strong> {correction}</p>
             </aside>
             """.format(
                 wrong=escape(item["wrong"]),
                 code=render_python_pre(item["code"]),
+                output=render_output_block(output_for_code(item["code"])),
                 correction=escape(item["correction"]),
             )
         )
@@ -3872,12 +4205,14 @@ def render_pitfalls(items: list[dict[str, str]]) -> str:
             <aside class='callout pitfall pitfall-card'>
               <div class='callout-title'>{title}</div>
               {code}
+              {output}
               <p><strong>Root cause:</strong> {analysis}</p>
               <p><strong>Fix:</strong> {fix}</p>
             </aside>
             """.format(
                 title=escape(item["title"]),
                 code=render_python_pre(item["code"]),
+                output=render_output_block(output_for_code(item["code"])),
                 analysis=escape(item["analysis"]),
                 fix=escape(item["fix"]),
             )
@@ -3911,9 +4246,18 @@ def render_section(concept: dict[str, object], dependents: dict[str, list[str]],
     dependent_badges = "".join(
         f"<a class='badge badge-subtle' href='#{cid}'>{cid}</a>" for cid in direct_dependents[:6]
     ) or "<span class='badge badge-subtle'>No direct dependents listed</span>"
+    prereq_text = (
+        f"Builds on: {', '.join(concept['prereqs'])}." if concept['prereqs']
+        else 'No prerequisites — this is a foundation concept.'
+    )
+    unlocks_text = (
+        f"Prepares you for: {', '.join(direct_dependents[:3])}." if direct_dependents
+        else 'Unlocks later integrations across the reference.'
+    )
     explanation = (
         f"<p>{escape(concept['quick'])}</p>"
-        f"<p>{escape(concept['problem'])} This section builds on {', '.join(concept['prereqs']) or 'no earlier concept IDs'} and prepares you for {', '.join(direct_dependents[:3]) or 'later integrations across the reference'}.</p>"
+        f"<p>{escape(concept['problem'])}</p>"
+        f"<p class='concept-links'>{escape(prereq_text)} {escape(unlocks_text)}</p>"
     )
     return f"""
 <section id=\"{concept['id']}\" class=\"concept-section\" data-layer=\"{concept['layer']}\" data-title=\"{escape(concept['title'])}\">
@@ -3924,7 +4268,7 @@ def render_section(concept: dict[str, object], dependents: dict[str, list[str]],
     <div class=\"prereq-wrap\"><span class=\"meta-label\">Used later in</span>{dependent_badges}</div>
   </div>
   <div class=\"what-youll-learn\"><h3>What you'll learn</h3><ul>{''.join(f'<li>{escape(item)}</li>' for item in concept['learn'])}</ul></div>
-  <aside class=\"callout motivation\"><div class=\"callout-title\">Motivation Box</div><div class=\"callout-body\">{escape(concept['problem'])}</div></aside>
+  <aside class=\"callout motivation\"><div class=\"callout-title\">Why This Matters</div><div class=\"callout-body\">{escape(concept['problem'])}</div></aside>
   <h3>Concept Explanation</h3>
   {explanation}
   <h3>Mental Model</h3>
@@ -3933,7 +4277,7 @@ def render_section(concept: dict[str, object], dependents: dict[str, list[str]],
   {render_examples(concept['examples'])}
   <h3>Common Misconceptions</h3>
   {render_misconceptions(misconceptions)}
-  <h3>Why Not</h3>
+  <h3>Trade-offs &amp; When to Avoid</h3>
   <p>{escape(concept['why_not'])}</p>
   <h3>Pitfalls &amp; Gotchas</h3>
   {render_pitfalls(pitfalls)}
@@ -4005,7 +4349,7 @@ try {
   <div class='section-kicker'>Python Complete Reference</div>
   <h1>Python from Runtime Basics to Expert Practice</h1>
   <p>This document is ordered by dependencies rather than as a loose glossary. Each topic appears only after its prerequisites, so you can learn the runtime model, core syntax, data structures, functions, OOP, protocols, packaging, concurrency, testing, and performance in a sequence that does not smuggle in unexplained concepts.</p>
-  <p>The left sidebar is grouped by layer and highlights the active section as you scroll. Every concept section includes motivation, explanation, mental model, examples, misconceptions, pitfalls, and self-check questions so the file reads like a compact textbook instead of a cheatsheet.</p>
+  <p>The left sidebar is grouped by layer and lets you focus on one concept at a time. Every concept section includes motivation, explanation, mental model, examples, misconceptions, pitfalls, and self-check questions so the file reads like a compact textbook instead of a cheatsheet.</p>
 </section>"""
     return template.replace("__NAV_GROUPS__", "".join(nav_groups))
 
@@ -4058,6 +4402,7 @@ const internalLinks = [...document.querySelectorAll("a[href^='#']")].filter((lin
   return Boolean(href && href.length > 1 && document.getElementById(href.slice(1)));
 });
 const trackedSections = [...document.querySelectorAll('.concept-section, #quick-reference, #whats-next')];
+const heroSection = document.getElementById('top');
 const sidebar = document.getElementById('sidebar');
 const mobileToggle = document.getElementById('mobileToggle');
 const backToTop = document.getElementById('backToTop');
@@ -4065,6 +4410,7 @@ const darkThemeStylesheet = document.getElementById('darkThemeStylesheet');
 const lightThemeStylesheet = document.getElementById('lightThemeStylesheet');
 const themeButtons = [...document.querySelectorAll('.theme-option')];
 const THEME_STORAGE_KEY = 'python-reference-theme';
+const DEFAULT_SECTION_ID = 'dependency-table';
 let currentTheme = window.__initialTheme === 'light' ? 'light' : 'dark';
 document.body.dataset.theme = currentTheme;
 
@@ -4129,6 +4475,51 @@ function copyBlockText(pre) {
   return pre.querySelector('code')?.textContent || '';
 }
 
+function setActiveNavLink(targetId) {
+  navLinks.forEach((link) => {
+    const active = link.getAttribute('href') === `#${targetId}`;
+    link.classList.toggle('active', active);
+    if (active) {
+      const group = link.closest('.nav-group');
+      group?.classList.remove('collapsed');
+      group?.querySelector('.group-toggle')?.setAttribute('aria-expanded', 'true');
+    }
+  });
+}
+
+function resolveTargetFromHash() {
+  const id = window.location.hash ? window.location.hash.slice(1) : DEFAULT_SECTION_ID;
+  return document.getElementById(id) || document.getElementById(DEFAULT_SECTION_ID) || trackedSections[0];
+}
+
+function focusSection(target, options = {}) {
+  if (!target) {
+    return;
+  }
+  const { updateHash = true, scroll = true, closeSidebar = true } = options;
+  trackedSections.forEach((section) => {
+    const visible = section.id === target.id;
+    section.hidden = !visible;
+    section.setAttribute('aria-hidden', String(!visible));
+  });
+  if (heroSection) {
+    const showHero = target.id === DEFAULT_SECTION_ID;
+    heroSection.hidden = !showHero;
+    heroSection.setAttribute('aria-hidden', String(!showHero));
+  }
+  setActiveNavLink(target.id);
+  if (closeSidebar && window.innerWidth < 769) {
+    sidebar.classList.remove('open');
+  }
+  const scrollTarget = !heroSection?.hidden && target.id === DEFAULT_SECTION_ID ? heroSection : target;
+  if (updateHash) {
+    syncLocationHash(`#${target.id}`);
+  }
+  if (scroll) {
+    scrollToTarget(scrollTarget, false);
+  }
+}
+
 document.querySelectorAll('pre[data-lang]').forEach((pre) => {
   const button = document.createElement('button');
   button.className = 'copy-btn';
@@ -4161,14 +4552,6 @@ mobileToggle.addEventListener('click', () => {
   sidebar.classList.toggle('open');
 });
 
-navLinks.forEach((link) => {
-  link.addEventListener('click', () => {
-    if (window.innerWidth < 769) {
-      sidebar.classList.remove('open');
-    }
-  });
-});
-
 internalLinks.forEach((link) => {
   link.addEventListener('click', (event) => {
     const href = link.getAttribute('href');
@@ -4177,31 +4560,13 @@ internalLinks.forEach((link) => {
       return;
     }
     event.preventDefault();
-    scrollToTarget(target);
+    focusSection(target);
   });
 });
 
 function updateScrollState() {
   backToTop.classList.toggle('visible', window.scrollY > 600);
 }
-
-const activeObserver = new IntersectionObserver((entries) => {
-  const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-  if (!visible.length) {
-    return;
-  }
-  const current = visible[0].target;
-  navLinks.forEach((link) => {
-    const active = link.getAttribute('href') === `#${current.id}`;
-    link.classList.toggle('active', active);
-    if (active) {
-      const group = link.closest('.nav-group');
-      group?.classList.remove('collapsed');
-      group?.querySelector('.group-toggle')?.setAttribute('aria-expanded', 'true');
-    }
-  });
-}, { rootMargin: '-18% 0px -58% 0px', threshold: [0.2, 0.45, 0.65] });
-trackedSections.forEach((section) => activeObserver.observe(section));
 
 backToTop.addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4222,6 +4587,10 @@ document.addEventListener('keydown', (event) => {
 });
 
 window.addEventListener('scroll', updateScrollState, { passive: true });
+window.addEventListener('popstate', () => {
+  focusSection(resolveTargetFromHash(), { updateHash: false, scroll: false, closeSidebar: false });
+});
+focusSection(resolveTargetFromHash(), { updateHash: false, scroll: false, closeSidebar: false });
 updateScrollState();
 syncThemeButtons(currentTheme);
 </script>
